@@ -47,5 +47,5 @@ Temporary Items
 .apdisk
 
 # Custom ignores
-BuildProcessTemplates/
-Dev/ClientApplication/bin/
+Dev/ClientApplication/bin/*
+Dev/ClientApplication/obj/*
