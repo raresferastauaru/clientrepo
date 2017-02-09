@@ -47,5 +47,5 @@ Temporary Items
 .apdisk
 
 # Custom ignores
-Dev\ClientApplication\bin\*
-Dev\ClientApplication\obj\*
+Dev/ClientApplication/bin/
+Dev/ClientApplication/obj/
