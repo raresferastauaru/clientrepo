@@ -48,3 +48,4 @@ Temporary Items
 
 # Custom ignores
 BuildProcessTemplates/
+Dev/ClientApplication/bin/

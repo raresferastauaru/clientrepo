@@ -52,3 +52,12 @@ C:\D\PersonalTFS\clientrepo\Dev\Dev\ClientApplication\obj\Debug\ClientApplicatio
 C:\D\PersonalTFS\clientrepo\Dev\Dev\ClientApplication\obj\Debug\ClientApplication.csproj.GenerateResource.Cache
 C:\D\PersonalTFS\clientrepo\Dev\Dev\ClientApplication\obj\Debug\ClientApplication.exe
 C:\D\PersonalTFS\clientrepo\Dev\Dev\ClientApplication\obj\Debug\ClientApplication.pdb
+C:\D\GitHub\clientrepo\Dev\ClientApplication\bin\Debug\ClientApplication.exe.config
+C:\D\GitHub\clientrepo\Dev\ClientApplication\bin\Debug\ClientApplication.exe
+C:\D\GitHub\clientrepo\Dev\ClientApplication\bin\Debug\ClientApplication.pdb
+C:\D\GitHub\clientrepo\Dev\ClientApplication\obj\Debug\ClientApplication.csprojResolveAssemblyReference.cache
+C:\D\GitHub\clientrepo\Dev\ClientApplication\obj\Debug\ClientApplication.Main.resources
+C:\D\GitHub\clientrepo\Dev\ClientApplication\obj\Debug\ClientApplication.Properties.Resources.resources
+C:\D\GitHub\clientrepo\Dev\ClientApplication\obj\Debug\ClientApplication.csproj.GenerateResource.Cache
+C:\D\GitHub\clientrepo\Dev\ClientApplication\obj\Debug\ClientApplication.exe
+C:\D\GitHub\clientrepo\Dev\ClientApplication\obj\Debug\ClientApplication.pdb
