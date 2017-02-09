@@ -10,8 +10,8 @@ namespace ClientApplication
 {
     public partial class Main : Form
     {
-        #region PrivateMembers
-		private const string MyIp = "193.226.9.250";						//10.6.99.254
+        #region PrivateMembers 
+		private const string MyIp = "193.226.9.250";						//10.6.99.254 
         private const string MyPort = "4445";								//4444
         private TcpCommunication _myTcp;
         private MyFsWatcher _myFsWatcher;
