@@ -1,0 +1,54 @@
+C:\D\Facultate\Licenta\ClientApplication\ClientApplication\bin\Debug\ClientApplication.exe.config
+C:\D\Facultate\Licenta\ClientApplication\ClientApplication\bin\Debug\ClientApplication.exe
+C:\D\Facultate\Licenta\ClientApplication\ClientApplication\bin\Debug\ClientApplication.pdb
+C:\D\Facultate\Licenta\ClientApplication\ClientApplication\obj\Debug\ClientApplication.csprojResolveAssemblyReference.cache
+C:\D\Facultate\Licenta\ClientApplication\ClientApplication\obj\Debug\ClientApplication.Properties.Resources.resources
+C:\D\Facultate\Licenta\ClientApplication\ClientApplication\obj\Debug\ClientApplication.csproj.GenerateResource.Cache
+C:\D\Facultate\Licenta\ClientApplication\ClientApplication\obj\Debug\ClientApplication.exe
+C:\D\Facultate\Licenta\ClientApplication\ClientApplication\obj\Debug\ClientApplication.pdb
+C:\D\Facultate\Licenta\ClientApplication\ClientApplication\obj\Debug\ClientApplication.Main.resources
+C:\D\Facultate\Licenta\ClientApplication - Adv\ClientApplication\bin\Debug\ClientApplication.exe.config
+C:\D\Facultate\Licenta\ClientApplication - Adv\ClientApplication\bin\Debug\ClientApplication.exe
+C:\D\Facultate\Licenta\ClientApplication - Adv\ClientApplication\bin\Debug\ClientApplication.pdb
+C:\D\Facultate\Licenta\ClientApplication - Adv\ClientApplication\obj\Debug\ClientApplication.csprojResolveAssemblyReference.cache
+C:\D\Facultate\Licenta\ClientApplication - Adv\ClientApplication\obj\Debug\ClientApplication.Main.resources
+C:\D\Facultate\Licenta\ClientApplication - Adv\ClientApplication\obj\Debug\ClientApplication.Properties.Resources.resources
+C:\D\Facultate\Licenta\ClientApplication - Adv\ClientApplication\obj\Debug\ClientApplication.csproj.GenerateResource.Cache
+C:\D\Facultate\Licenta\ClientApplication - Adv\ClientApplication\obj\Debug\ClientApplication.exe
+C:\D\Facultate\Licenta\ClientApplication - Adv\ClientApplication\obj\Debug\ClientApplication.pdb
+C:\D\Facultate\Licenta\ClientApplication - Adv2\ClientApplication\bin\Debug\ClientApplication.exe.config
+C:\D\Facultate\Licenta\ClientApplication - Adv2\ClientApplication\bin\Debug\ClientApplication.exe
+C:\D\Facultate\Licenta\ClientApplication - Adv2\ClientApplication\bin\Debug\ClientApplication.pdb
+C:\D\Facultate\Licenta\ClientApplication - Adv2\ClientApplication\obj\Debug\ClientApplication.csprojResolveAssemblyReference.cache
+C:\D\Facultate\Licenta\ClientApplication - Adv2\ClientApplication\obj\Debug\ClientApplication.Main.resources
+C:\D\Facultate\Licenta\ClientApplication - Adv2\ClientApplication\obj\Debug\ClientApplication.Properties.Resources.resources
+C:\D\Facultate\Licenta\ClientApplication - Adv2\ClientApplication\obj\Debug\ClientApplication.csproj.GenerateResource.Cache
+C:\D\Facultate\Licenta\ClientApplication - Adv2\ClientApplication\obj\Debug\ClientApplication.exe
+C:\D\Facultate\Licenta\ClientApplication - Adv2\ClientApplication\obj\Debug\ClientApplication.pdb
+C:\D\Facultate\Licenta\ClientApplication - Adv3\ClientApplication\bin\Debug\ClientApplication.exe.config
+C:\D\Facultate\Licenta\ClientApplication - Adv3\ClientApplication\bin\Debug\ClientApplication.exe
+C:\D\Facultate\Licenta\ClientApplication - Adv3\ClientApplication\bin\Debug\ClientApplication.pdb
+C:\D\Facultate\Licenta\ClientApplication - Adv3\ClientApplication\obj\Debug\ClientApplication.csprojResolveAssemblyReference.cache
+C:\D\Facultate\Licenta\ClientApplication - Adv3\ClientApplication\obj\Debug\ClientApplication.Main.resources
+C:\D\Facultate\Licenta\ClientApplication - Adv3\ClientApplication\obj\Debug\ClientApplication.Properties.Resources.resources
+C:\D\Facultate\Licenta\ClientApplication - Adv3\ClientApplication\obj\Debug\ClientApplication.csproj.GenerateResource.Cache
+C:\D\Facultate\Licenta\ClientApplication - Adv3\ClientApplication\obj\Debug\ClientApplication.exe
+C:\D\Facultate\Licenta\ClientApplication - Adv3\ClientApplication\obj\Debug\ClientApplication.pdb
+C:\D\PersonalTFS\clientrepo\Dev\ClientApplication\bin\Debug\ClientApplication.exe.config
+C:\D\PersonalTFS\clientrepo\Dev\ClientApplication\bin\Debug\ClientApplication.exe
+C:\D\PersonalTFS\clientrepo\Dev\ClientApplication\bin\Debug\ClientApplication.pdb
+C:\D\PersonalTFS\clientrepo\Dev\ClientApplication\obj\Debug\ClientApplication.Main.resources
+C:\D\PersonalTFS\clientrepo\Dev\ClientApplication\obj\Debug\ClientApplication.Properties.Resources.resources
+C:\D\PersonalTFS\clientrepo\Dev\ClientApplication\obj\Debug\ClientApplication.csproj.GenerateResource.Cache
+C:\D\PersonalTFS\clientrepo\Dev\ClientApplication\obj\Debug\ClientApplication.exe
+C:\D\PersonalTFS\clientrepo\Dev\ClientApplication\obj\Debug\ClientApplication.pdb
+C:\D\PersonalTFS\clientrepo\Dev\ClientApplication\obj\Debug\ClientApplication.csprojResolveAssemblyReference.cache
+C:\D\PersonalTFS\clientrepo\Dev\Dev\ClientApplication\bin\Debug\ClientApplication.exe.config
+C:\D\PersonalTFS\clientrepo\Dev\Dev\ClientApplication\bin\Debug\ClientApplication.exe
+C:\D\PersonalTFS\clientrepo\Dev\Dev\ClientApplication\bin\Debug\ClientApplication.pdb
+C:\D\PersonalTFS\clientrepo\Dev\Dev\ClientApplication\obj\Debug\ClientApplication.csprojResolveAssemblyReference.cache
+C:\D\PersonalTFS\clientrepo\Dev\Dev\ClientApplication\obj\Debug\ClientApplication.Main.resources
+C:\D\PersonalTFS\clientrepo\Dev\Dev\ClientApplication\obj\Debug\ClientApplication.Properties.Resources.resources
+C:\D\PersonalTFS\clientrepo\Dev\Dev\ClientApplication\obj\Debug\ClientApplication.csproj.GenerateResource.Cache
+C:\D\PersonalTFS\clientrepo\Dev\Dev\ClientApplication\obj\Debug\ClientApplication.exe
+C:\D\PersonalTFS\clientrepo\Dev\Dev\ClientApplication\obj\Debug\ClientApplication.pdb
