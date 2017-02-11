@@ -18,8 +18,6 @@ namespace ClientApplication.Models
         public bool WasReadOnly { get; private set; }
         public long Size { get; private set; }
         public FileInfo FileInfo { get; private set; }
-
-        public bool Blocked { get; set; }
         #endregion Properties
 
         #region Constructors
@@ -35,7 +33,6 @@ namespace ClientApplication.Models
             OldRelativePath = RelativePath;
             HashCode = GetFilesHashCode();
             OldHashCode = 0;
-            Blocked = false;
 
             if (File.Exists(fullLocalPath))
                 FileInfo = new FileInfo(fullLocalPath);
@@ -54,7 +51,6 @@ namespace ClientApplication.Models
             FullLocalPath = fullLocalPath;
             RelativePath = Helper.GetRelativePath(fullLocalPath);
             FileInfo = new FileInfo(FullLocalPath);
-            Blocked = false;
 
             if (changeType == FileChangeTypes.RenamedOnClient)
                 OldRelativePath = Helper.GetRelativePath(oldFullPath);
@@ -91,7 +87,6 @@ namespace ClientApplication.Models
             OldRelativePath = oldRelativePath;
             HashCode = hashCode;
             OldHashCode = oldHashCode;
-            Blocked = false;
 
             if (changeType == FileChangeTypes.ChangedOnClient || changeType == FileChangeTypes.ChangedOnServer)
                 FullLocalPath = Helper.GetLocalPath(RelativePath);
@@ -115,8 +110,8 @@ namespace ClientApplication.Models
                 {
                     var info = new FileInfo(FullLocalPath);
                     
-                    var infoStr = info.CreationTime.ToString(CultureInfo.InvariantCulture)
-                                    + info.LastWriteTime.ToString(CultureInfo.InvariantCulture)
+                    var infoStr = info.CreationTimeUtc.ToString(CultureInfo.InvariantCulture)
+                                    + info.LastWriteTimeUtc.ToString(CultureInfo.InvariantCulture)
                                     + info.IsReadOnly;
                     
                     var infoHash = infoStr.GetHashCode();
@@ -133,11 +128,20 @@ namespace ClientApplication.Models
         {
             var str = "FileHashDetails:"
                       + HashCode + ":"
-                      + FileInfo.CreationTime.Ticks + ":"
-                      + FileInfo.LastWriteTime.Ticks + ":"
+                      + FileInfo.CreationTimeUtc.Ticks + ":"
+					  + FileInfo.LastWriteTimeUtc.Ticks + ":"
                       + FileInfo.IsReadOnly + ":";
             return str;
         }
+
+		public string Stuff()
+		{
+			var str = HashCode + ":"
+					  + FileInfo.CreationTime + ":"
+					  + FileInfo.LastWriteTime + ":"
+					  + FileInfo.IsReadOnly + ":";
+			return str;
+		}
 
         public override string ToString()
         {

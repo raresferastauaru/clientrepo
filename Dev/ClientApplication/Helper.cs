@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Configuration;
 using System.IO;
 
@@ -6,31 +7,23 @@ namespace ClientApplication
 {
     public class Helper
     {
-        private static string _logingLocation = String.Empty;
-        public static string LogingLocation
-        {
-            get
-            {
-                if (String.IsNullOrEmpty(_logingLocation))
-                    _logingLocation = ConfigurationManager.AppSettings["LogingLocation"] + "Log_" +
-                                       DateTime.Now.ToShortDateString().Replace("/", "") + ".txt";
+	    static Helper()
+	    {
+			LogingLocation = ConfigurationManager.AppSettings["LogingLocation"] + "Log_" +
+								   DateTime.Now.ToShortDateString().Replace("/", "") + ".txt";
+			SyncLocation = ConfigurationManager.AppSettings["SyncLocation"];
+			BufferSize = int.Parse(ConfigurationManager.AppSettings["BufferSize"]);
+		    TraceEnabled = bool.Parse(ConfigurationManager.AppSettings["TraceEnabled"]);
 
-                return _logingLocation;
-            }
-        }
+			TraceItems = new List<string>();
+	    }
 
-        private static string _syncLocation = String.Empty;
-        public static string SyncLocation
-        {
-            get
-            {
-                if(String.IsNullOrEmpty(_syncLocation))
-                    _syncLocation = ConfigurationManager.AppSettings["SyncLocation"];
-
-                return _syncLocation;
-            }
-        }
-
+        public static string LogingLocation { get; private set; }
+		public static string SyncLocation { get; private set; }
+		public static int BufferSize { get; private set; }
+		public static bool TraceEnabled { get; private set; }
+		public static List<string> TraceItems { get; set; } 
+		
         public static string GetRelativePath(String path)
         {
 			var relativePath = path.Remove(0, SyncLocation.Length).Replace('\\','/');
@@ -45,7 +38,6 @@ namespace ClientApplication
         {
             return ((File.GetAttributes(path) & FileAttributes.Directory) != 0);
         }
-
         public static bool IsFileLocked(String fullPath)
         {
             var fileInfo = new FileInfo(fullPath);
@@ -91,7 +83,6 @@ namespace ClientApplication
             //file is not locked
             return false;
         }
-
         public static void ValidateDirectoryForFile(string fileName)
         {
             var dirPath = Path.GetDirectoryName(fileName);
@@ -100,6 +91,7 @@ namespace ClientApplication
             if (!Directory.Exists(fullPath))
                 Directory.CreateDirectory(fullPath);
         }
+
     }
 }
 

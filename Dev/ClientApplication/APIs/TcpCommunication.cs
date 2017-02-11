@@ -4,6 +4,7 @@ using System.IO;
 using System.Linq;
 using System.Net.Sockets;
 using System.Text;
+
 using ClientApplication.Models;
 
 namespace ClientApplication.APIs
@@ -12,9 +13,8 @@ namespace ClientApplication.APIs
     {
         private readonly TcpClient _tcpClient;
         private readonly NetworkStream _networkStream;
-		private readonly int bufferSize = 8192; // 1492;
 
-        public TcpCommunication(String hostName, Int32 port)
+	    public TcpCommunication(String hostName, Int32 port)
         {
             try
             {
@@ -61,14 +61,16 @@ namespace ClientApplication.APIs
                                       + messageParts[4].Length              // IsReadOnly
                                       + 5);                                 // Plus 1 for each ':' contained in readMessage
                     var remainedMessageSize = bytesRead - offsetSize;
-					
+					var expectedSize = int.Parse(messageParts[1]);
 					// If we have some DataContent in the Acknowledge message we write that in the file.
-                    if (remainedMessageSize > 0)
-                        fileStream.Write(readMessage, offsetSize, remainedMessageSize);//readMessage.Length - 1);
+	                if (remainedMessageSize > 0)
+	                {
+		                fileStream.Write(readMessage, offsetSize, remainedMessageSize); //readMessage.Length - 1);
+		                expectedSize -= remainedMessageSize;
+	                }
 
-					// Writing the DataContent in file until we get the entire expected size.
-	                var buffer = new byte[bufferSize];
-                    var expectedSize = int.Parse(messageParts[1]);
+	                // Writing the DataContent in file until we get the entire expected size.
+	                var buffer = new byte[Helper.BufferSize];
                     while (expectedSize > 0)
                     {
                         var numberOfBytesRead = _networkStream.Read(buffer, 0, buffer.Length);
@@ -97,7 +99,7 @@ namespace ClientApplication.APIs
 			// Prepare and send the PUT command
             var putCommandBytes = Encoding.Default.GetBytes("PUT:" + customFileHash.RelativePath + ":" + dataBytes.Length + ":");
             _networkStream.Write(putCommandBytes, 0, putCommandBytes.Length);
-			
+
 			// Processing the response for the PUT command
 			string message;
             var readMessage = new byte[1024];
@@ -106,9 +108,9 @@ namespace ClientApplication.APIs
             if (messageParts[0].Equals("ACKNOWLEDGE"))
             {
 				// Sending the entire DataContent
-				var buffer = new byte[bufferSize];
+				var buffer = new byte[Helper.BufferSize];
 	            var fileStream = new FileStream(customFileHash.FullLocalPath, FileMode.Open, FileAccess.Read, FileShare.None);
-				var readBytes = 0;
+				int readBytes;
 		        while ((readBytes = fileStream.Read(buffer, 0, buffer.Length)) > 0)
 		        {
 			        _networkStream.Write(dataBytes, 0, readBytes);
@@ -116,7 +118,7 @@ namespace ClientApplication.APIs
 				fileStream.Close();
 
 
-	            // Processing the response for sent data
+				// Processing the response for sent data
                 readMessage = new byte[1024];
                 _networkStream.Read(readMessage, 0, 1024);
                 messageParts = Encoding.ASCII.GetString(readMessage).Split(':');
@@ -160,7 +162,7 @@ namespace ClientApplication.APIs
 
 			// Processing the response for the requested rename
             var readMessage = new byte[1024];
-            var bytesRead = _networkStream.Read(readMessage, 0, 1024);
+            _networkStream.Read(readMessage, 0, 1024);
             var messageParts = Encoding.ASCII.GetString(readMessage).Split(':');
             if (messageParts[0].Equals("ACKNOWLEDGE") && _networkStream.CanRead)
             {
@@ -185,13 +187,11 @@ namespace ClientApplication.APIs
             _networkStream.Write(deleteCommandBytes, 0, deleteCommandBytes.Length);
 
             var readMessage = new byte[1024];
-            var bytesRead = _networkStream.Read(readMessage, 0, 1024);
+            _networkStream.Read(readMessage, 0, 1024);
             var messageParts = Encoding.ASCII.GetString(readMessage).Split(':');
 
             if (messageParts[0].Equals("ACKNOWLEDGE") && _networkStream.CanRead)
-            {
                 return true;
-            }
 
             var errorMessage = messageParts[1];
             throw new Exception(errorMessage);
@@ -204,13 +204,11 @@ namespace ClientApplication.APIs
             _networkStream.Write(newFolderCommandBytes, 0, newFolderCommandBytes.Length);
 
             var readMessage = new byte[1024];
-            var bytesRead = _networkStream.Read(readMessage, 0, 1024);
+            _networkStream.Read(readMessage, 0, 1024);
             var messageParts = Encoding.ASCII.GetString(readMessage).Split(':');
 
             if (messageParts[0].Equals("ACKNOWLEDGE") && _networkStream.CanRead)
-            {
                 return true;
-            }
 
             var errorMessage = messageParts[1];
             throw new Exception(errorMessage);
@@ -230,7 +228,7 @@ namespace ClientApplication.APIs
 
 			// Reading all FileHashes string
             var memoryStream = new MemoryStream();
-            var myReadBuffer = new byte[bufferSize];
+			var myReadBuffer = new byte[Helper.BufferSize];
             do
             {
                 var numberOfBytesRead = _networkStream.Read(myReadBuffer, 0, myReadBuffer.Length);
@@ -275,8 +273,8 @@ namespace ClientApplication.APIs
             var lastWriteTime = new DateTime(long.Parse(lastWriteTimeTicks));
             var isReadOnly = bool.Parse(isReadOnlyString);
 
-            File.SetCreationTime(fullPath, creationTime);
-            File.SetLastWriteTime(fullPath, lastWriteTime);
+            File.SetCreationTimeUtc(fullPath, creationTime);
+            File.SetLastWriteTimeUtc(fullPath, lastWriteTime);
             
             var fileAttributes = File.GetAttributes(fullPath);
             if (isReadOnly)

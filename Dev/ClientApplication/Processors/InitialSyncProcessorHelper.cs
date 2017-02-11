@@ -24,14 +24,14 @@ namespace ClientApplication.Processors
                     if (serverFileHash.RelativePath == localFileHash.RelativePath &&
                         serverFileHash.HashCode == localFileHash.HashCode)
                     {
-                        str = String.Format("{0}. File {1} is up to date !", contor++, localFileHash.RelativePath);
+                        str = String.Format("{0}. UP TO DATE: {1}! --- {2}", contor++, localFileHash.RelativePath, localFileHash.Stuff());
                     }
                     else if (serverFileHash.RelativePath == localFileHash.RelativePath &&
                              serverFileHash.HashCode != localFileHash.HashCode)
                     {
                         if (localFileHash.HashCode == serverFileHash.OldHashCode)
                         {
-                            str = String.Format("{0}. GET of file {1} ({2}) (Update on SERVER)", contor++,
+                            str = String.Format("{0}. GET: {1} ({2}) (Update on SERVER)", contor++,
                                                 serverFileHash.RelativePath, serverFileHash.HashCode);
 
                             initialSyncFiles.Add(new CustomFileHash(FileChangeTypes.ChangedOnServer,
@@ -40,31 +40,31 @@ namespace ClientApplication.Processors
                         }
                         else
                         {
-                            str = String.Format("{0}. PUT of file {1} ({2}) (Update on CLIENT)", contor++,
+                            str = String.Format("{0}. PUT: {1} ({2}) (Update on CLIENT)", contor++,
                                                 serverFileHash.RelativePath, serverFileHash.HashCode);
 
-                            initialSyncFiles.Add(new CustomFileHash(FileChangeTypes.ChangedOnClient,
-                                    serverFileHash.RelativePath, serverFileHash.OldRelativePath,
-                                    serverFileHash.HashCode, serverFileHash.OldHashCode));
+							initialSyncFiles.Add(new CustomFileHash(FileChangeTypes.ChangedOnClient,
+									localFileHash.RelativePath, localFileHash.OldRelativePath,
+									localFileHash.HashCode, localFileHash.OldHashCode));
                         }
                     }
                     else if (serverFileHash.RelativePath != localFileHash.RelativePath &&
                              serverFileHash.HashCode == localFileHash.HashCode)
                     {
                         str = String.Format(localFileHash.RelativePath == serverFileHash.RelativePath ? 
-                                            "{0}. RENAME of file {1} to {2} (New name on SERVER) - NOT IMPLEMENTED YET !" 
+                                            "{0}. RENAME: {1} to {2} (New name on SERVER) - NOT IMPLEMENTED YET ???!" 
                                             : 
-                                            "{0}. RENAME of file {1} to {2} (New name on CLIENT) - NOT IMPLEMENTED YET !", 
+                                            "{0}. RENAME: {1} to {2} (New name on CLIENT) - NOT IMPLEMENTED YET ???!", 
                                             contor++, serverFileHash.OldRelativePath, serverFileHash.RelativePath);
                     }
                     else
                     {
-                        str = String.Format("{0}. UNDEFINED scenario on InitialSyncProcessor. Please investigate it!\n{1}. ", contor++, serverFileHash);
+                        str = String.Format("{0}. UNDEFINED: InitialSyncProcessor. Please investigate it!\n{1}. ", contor++, serverFileHash);
                     }
                 }
                 else
                 {
-                    str = String.Format("{0}. GET of file {1}({2}) (New file on SERVER).", ++contor,
+                    str = String.Format("{0}. GET: {1} ({2}) (New file on SERVER).", ++contor,
                                         serverFileHash.RelativePath, serverFileHash.HashCode);
 
                     initialSyncFiles.Add(new CustomFileHash(FileChangeTypes.ChangedOnServer,
@@ -88,7 +88,7 @@ namespace ClientApplication.Processors
             
             foreach (var clientFileHash in clientFileHashes)
             {
-                var str = String.Format("{0}. PUT of file {1}({2}) (New file on CLIENT).", ++contor, clientFileHash.RelativePath, clientFileHash.HashCode);
+                var str = String.Format("{0}. PUT: {1}({2}) (New file on CLIENT).", ++contor, clientFileHash.RelativePath, clientFileHash.HashCode);
                 Logger.WriteLine(str);
 
                 initialSyncFiles.Add(new CustomFileHash(FileChangeTypes.ChangedOnClient, 

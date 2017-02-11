@@ -1,14 +1,18 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
+using System.Linq;
+using System.Threading;
+using System.Threading.Tasks;
 using System.Windows.Forms;
 
 using ClientApplication.APIs;
-using ClientApplication.Models; 
+using ClientApplication.Models;
+using ClientApplication.Processors;
 
 namespace ClientApplication
 {
-
     public partial class Main : Form
     {
         #region PrivateMembers 
@@ -29,34 +33,9 @@ namespace ClientApplication
         {
             var tabs = tabApplicationMode.TabPages;
             tabApplicationMode.SelectedTab = tabs[1];
-            tabApplicationMode.SelectedTab = tabs[0];
+//            tabApplicationMode.SelectedTab = tabs[0];
 
-            Test();
-        }
-        private void Test()
-        {
-//            btnConnect_Click(null, null);
-//            btnConnectAuto_Click(null, null);
-
-//            var serverFilesHashes = _myTcp.GetAllFileHashes();
-//
-//            var paths = Directory.GetFiles(Helper.SyncLocation, "*", SearchOption.AllDirectories)
-//                                 .Where(p => !p.Equals(Helper.SyncLocation + "\\desktop.ini"))
-//                                 .ToList();
-//            var clientFileHashes = new List<CustomFileHash>();
-//            paths.ForEach(path => clientFileHashes.Add(new CustomFileHash(path)));
-//
-//            var processedFileHashes = InitialSyncProcessorHelper.GetProcessedFileHashes(clientFileHashes, serverFilesHashes);
-//
-//            var syncProcessor = new SyncProcessor(_myTcp);
-//            processedFileHashes.ForEach(syncProcessor.EnqueueChange);
-//            Task.Factory.StartNew(syncProcessor.ChangedFileManager());
-//
-//            Thread.Sleep(5000);
-//            Logger.OpenTheLogFile();
-//            btnGetConfirm_Click(null, null);
-
-//            btnPutConfirm_Click(null, null);
+	        btnConnectAuto_Click(null, null);
         }
         private void tabApplicationMode_SelectedIndexChanged(object sender, EventArgs e)
         {
@@ -281,18 +260,76 @@ namespace ClientApplication
             try
             {
                 Context.InAutoMode = true;
-                Logger.InitLogger();
-                _myTcp = new TcpCommunication(txtHostAuto.Text, Int32.Parse(txtPortAuto.Text));
-				// MyFsWatcher should be a separate watcher
-                _myFsWatcher = new MyFsWatcher(txtDefaultFolderAuto.Text, _myTcp);
-                SwitchAutoUiState(UiConnectedState);
+
+				StartLogger();
+				Task.Factory.StartNew(StartSynchroniser);
+                
+				SwitchAutoUiState(UiConnectedState);
             }
             catch (Exception ex)
-            {
-                MessageBox.Show(ex.Message);
+			{
+				SwitchAutoUiState(false);
+	            MessageBox.Show(ex.Message);
             }
         }
-        
+
+		private void StartSynchroniser()
+	    {
+		    _myTcp = new TcpCommunication(txtHostAuto.Text, Int32.Parse(txtPortAuto.Text));
+		    var syncProcessor = new SyncProcessor(_myTcp);
+
+			Logger.WriteInitialSyncBreakLine();
+		    DetermineFilesForInitialSync().ForEach(syncProcessor.AddChangedFile);
+			var initialSyncTask = Task.Factory.StartNew(syncProcessor.ChangedFileManager());
+			initialSyncTask.Wait();
+
+			Logger.WriteSyncBreakLine();
+			_myFsWatcher = new MyFsWatcher(txtDefaultFolderAuto.Text, syncProcessor);
+	    }
+
+	    private void StartLogger()
+	    {
+		    if (Helper.TraceEnabled)
+		    {
+			    Logger.InitLogger(true);
+			    Task.Factory.StartNew(() =>
+			    {
+				    while (true)
+				    {
+					    Invoke((MethodInvoker) delegate
+					    {
+						    try
+						    {
+							    if (lbTrace.Items.Count > 0)
+								    lbTrace.Items.Clear();
+							    Helper.TraceItems.ForEach(i => lbTrace.Items.Add(i));
+						    }
+						    catch (Exception ex)
+						    {
+							    Logger.WriteLine("Tracer error: " + ex.Message);
+						    }
+					    });
+					    Thread.Sleep(1000);
+				    }
+			    });
+		    }
+		    else Logger.InitLogger();
+	    }
+
+	    private List<CustomFileHash> DetermineFilesForInitialSync()
+		{
+			var clientFileHashes = new List<CustomFileHash>();
+			var paths = Directory.GetFiles(Helper.SyncLocation, "*", SearchOption.AllDirectories)
+									.Where(p => !p.Equals(Helper.SyncLocation + "\\desktop.ini"))
+									.ToList();
+			paths.ForEach(path => clientFileHashes.Add(new CustomFileHash(path)));
+
+			var serverFilesHashes = _myTcp.GetAllFileHashes();
+			var processedFileHashes = InitialSyncProcessorHelper.GetProcessedFileHashes(clientFileHashes, serverFilesHashes);
+
+			return processedFileHashes;
+		}
+
         private void btnDisconnectAuto_Click(object sender, EventArgs e)
         {
             try
@@ -302,10 +339,11 @@ namespace ClientApplication
                 _myTcp.Dispose();
                 _myFsWatcher.Dispose();
 
-                SwitchAutoUiState(false);
+				SwitchAutoUiState(false);
             }
             catch (Exception ex)
-            {
+			{
+				SwitchAutoUiState(false);
                 MessageBox.Show(ex.Message);
             }
         }
@@ -325,6 +363,17 @@ namespace ClientApplication
 
         private void SwitchAutoUiState(bool uiState)
         {
+	        if (Helper.TraceEnabled && uiState)
+	        {
+				Width = 1380;
+				lbTrace.Visible = true;
+	        }
+			else if (Helper.TraceEnabled && !uiState)
+			{
+				Width = 680;
+				lbTrace.Visible = false;
+			}
+
             btnConnectAuto.Enabled = !uiState;
             btnDisconnectAuto.Enabled = uiState;
             btnBrowseDefFolderAuto.Enabled = !uiState;

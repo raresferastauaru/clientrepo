@@ -1,7 +1,7 @@
 ﻿using System;
-using System.Collections.Concurrent;
 using System.IO;
 using System.Linq;
+using System.Runtime.Remoting.Messaging;
 using System.Threading;
 
 using ClientApplication.APIs;
@@ -12,29 +12,46 @@ namespace ClientApplication.Processors
     public class SyncProcessor
     {
         private int _dequeuedFilesCounter = 1;
-        private readonly TcpCommunication _myTcp;
-        private readonly ConcurrentQueue<CustomFileHash> _changedFilesQueue;
+		public bool On { get; private set; }
+		private readonly TcpCommunication _myTcp;
+		private readonly ThreadSafeList<CustomFileHash> _changedFilesList;
 
-		public bool SyncProcessorEnabled { get; set; }
+		public SyncProcessor(TcpCommunication myTcp)
+		{
+			_myTcp = myTcp;
+			_changedFilesList = new ThreadSafeList<CustomFileHash>();
+		}
 
-        public SyncProcessor(TcpCommunication myTcp)
-        {
-            _myTcp = myTcp;
-            _changedFilesQueue = new ConcurrentQueue<CustomFileHash>();
-        }
+		public void AddChangedFile(CustomFileHash customFileHash)
+		{
+			_changedFilesList.Add(customFileHash);
+		}
+
+		public bool InProcessingList(string relativePath)
+		{
+			return _changedFilesList.Any(f => f.RelativePath.Equals(relativePath));
+		}
+
+		public void RemoveFileHash(string relativePath)
+		{
+			var fileHash = _changedFilesList.First(f => f.RelativePath == relativePath);
+			_changedFilesList.Remove(fileHash);
+		}
 
         public Action ChangedFileManager()
         {
             return () =>
             {
+				On = true;
                 while (true)
                 {
+					CustomFileHash fileHash = null;
                     try
                     {
-                        if (SyncProcessorEnabled && !_changedFilesQueue.IsEmpty)
+                        if (_changedFilesList.Count != 0)
                         {
+	                        fileHash = _changedFilesList.First();
                             var processed = false;
-                            var fileHash = _changedFilesQueue.First();
                             if (!File.Exists(fileHash.FullLocalPath) || (File.Exists(fileHash.FullLocalPath) && !Helper.IsFileLocked(fileHash.FullLocalPath)))
                             {
                                 switch (fileHash.ChangeType)
@@ -47,7 +64,7 @@ namespace ClientApplication.Processors
                                         break;
 
                                     case FileChangeTypes.ChangedOnClient:
-                                        _myTcp.Put(fileHash);
+                                       _myTcp.Put(fileHash);
                                         Logger.WriteLine(String.Format("{0}. Succes on dequeue: {1} ==> {2}",
                                             _dequeuedFilesCounter++, fileHash.RelativePath, fileHash.ChangeType));
                                         break;
@@ -92,39 +109,30 @@ namespace ClientApplication.Processors
 
                                 processed = true;
                             }
-
-                            if (_changedFilesQueue.TryDequeue(out fileHash))
-                            {
-                                if (!processed)
-                                    _changedFilesQueue.Enqueue(fileHash);
-                            }
-                            else
-                            {
-                                Logger.WriteLine("Queue is empty. HOW ?!");
-                            }
+							
+							_changedFilesList.Remove(fileHash);
+							if(!processed)
+								_changedFilesList.Add(fileHash);
                         }
                         else
                         {
                             // The queue is EMPTY or the processor is blocked.. wait 1 sec and then check for changes
-                            Thread.Sleep(1000);
+                            // Thread.Sleep(1000);
+	                        On = false;
+	                        return;
                         }
                     }
                     catch (Exception ex)
                     {
+	                    if (fileHash != null)
+	                    {
+		                    _changedFilesList.Remove(fileHash);
+	                    }
+
                         Logger.WriteLine("\t!!!\tEXCEPTION: on MyFSWatcher: " + ex.Message + "\t!!!");
                     }
                 }
             };
-        }
-
-        public void EnqueueChange(CustomFileHash customFileHash)
-        {
-            _changedFilesQueue.Enqueue(customFileHash);
-        }
-
-        public bool Processing(string fullPath)
-        {
-            return _changedFilesQueue.Any(f => String.Equals(f.FullLocalPath, fullPath));
         }
     }
 }

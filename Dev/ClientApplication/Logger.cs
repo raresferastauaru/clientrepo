@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using ClientApplication.Models;
@@ -7,17 +8,32 @@ namespace ClientApplication
 {
     public static class Logger
     {
-        public static void InitLogger()
-        {
+		private static bool _traceEnabled;
+        public static void InitLogger(bool traceEnabled = false)
+		{
+			var dirPath = Path.GetDirectoryName(Helper.LogingLocation);
+			if (!string.IsNullOrEmpty(dirPath) && !Directory.Exists(dirPath))
+				Directory.CreateDirectory(dirPath);
+
             if(File.Exists(Helper.LogingLocation))
                 File.Delete(Helper.LogingLocation);
+
+			if (traceEnabled)
+			{
+				_traceEnabled = true;
+				Helper.TraceItems = new List<string>();
+			}
         }
 
         public static void WriteLine(string message)
         {
             try
             {
-                File.AppendAllText(Helper.LogingLocation, String.Format("{0} : {1}\n", DateTime.Now , message));
+	            var msg = String.Format("{0} : {1}\n", DateTime.Now, message);
+				File.AppendAllText(Helper.LogingLocation, msg);
+
+				if (_traceEnabled)
+					Helper.TraceItems.Insert(0, msg);
             }
             catch (Exception ex)
             {
@@ -28,7 +44,7 @@ namespace ClientApplication
         public static void WriteFileHash(int counter, CustomFileHash customFileHash)
         {
             var str = string.Format(
-                "{0}. File Change Enqueued:\n\tRelativePath: {1}\n\tChangeType: {2}\n\tHashCode: {3}\n\tReadOnly: {4}",
+                "{0}. File Change Enqueued:\n\tRelativePath: {1}\n\tChangeType: {2}\n\tHashCode: {3}\n\tReadOnly: {4}\n",
                 counter,
                 customFileHash.RelativePath,
                 customFileHash.ChangeType,
