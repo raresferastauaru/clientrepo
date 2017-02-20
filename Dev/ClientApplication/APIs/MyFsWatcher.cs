@@ -1,11 +1,7 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.IO;
-using System.Linq;
 using System.Security.Permissions;
-using System.Threading;
 using System.Threading.Tasks;
-
 using ClientApplication.Models;
 using ClientApplication.Processors;
 
@@ -15,10 +11,10 @@ namespace ClientApplication.APIs
 	{
 		private int _enqueuedFilesCounter = 1;
 		private readonly SyncProcessor _syncProcessor;
-        private readonly FileSystemWatcher _fileWatcher;
+		private readonly FileSystemWatcher _fileWatcher;
 
         [PermissionSet(SecurityAction.Demand, Name = "FullTrust")]
-        public MyFsWatcher(String watcherPath, SyncProcessor syncProcessor)
+		public MyFsWatcher(String watcherPath, SyncProcessor syncProcessor)
         {
 			_syncProcessor = syncProcessor;
             _fileWatcher = new FileSystemWatcher
@@ -33,10 +29,11 @@ namespace ClientApplication.APIs
             _fileWatcher.Renamed += OnChanged;
 			_fileWatcher.Deleted += OnChanged;
         }
-        public void Dispose()
-        {
-            _fileWatcher.Dispose();
-        }
+
+		public void Dispose()
+		{
+			_fileWatcher.Dispose();
+		}
 
         private void OnChanged(object source, FileSystemEventArgs e)
         {

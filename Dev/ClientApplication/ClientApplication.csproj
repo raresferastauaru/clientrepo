@@ -55,6 +55,7 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="APIs\CommandHandler.cs" />
     <Compile Include="Context.cs" />
     <Compile Include="Models\CustomFileHash.cs" />
     <Compile Include="Logger.cs" />

@@ -1,4 +1,6 @@
-﻿namespace ClientApplication
+﻿using System.Drawing;
+
+namespace ClientApplication
 {
     partial class Main
     {
@@ -79,7 +81,7 @@
 			this.tabApplicationMode.Location = new System.Drawing.Point(0, 0);
 			this.tabApplicationMode.Name = "tabApplicationMode";
 			this.tabApplicationMode.SelectedIndex = 0;
-			this.tabApplicationMode.Size = new System.Drawing.Size(670, 360);
+			this.tabApplicationMode.Size = new System.Drawing.Size(694, 360);
 			this.tabApplicationMode.TabIndex = 0;
 			this.tabApplicationMode.SelectedIndexChanged += new System.EventHandler(this.tabApplicationMode_SelectedIndexChanged);
 			// 
@@ -114,7 +116,7 @@
 			this.tabManual.Location = new System.Drawing.Point(4, 22);
 			this.tabManual.Name = "tabManual";
 			this.tabManual.Padding = new System.Windows.Forms.Padding(3);
-			this.tabManual.Size = new System.Drawing.Size(662, 334);
+			this.tabManual.Size = new System.Drawing.Size(686, 334);
 			this.tabManual.TabIndex = 0;
 			this.tabManual.Text = "Manual";
 			this.tabManual.UseVisualStyleBackColor = true;
@@ -447,9 +449,9 @@
 			// lbTrace
 			// 
 			this.lbTrace.FormattingEnabled = true;
-			this.lbTrace.Location = new System.Drawing.Point(670, 17);
+			this.lbTrace.Location = new System.Drawing.Point(4, 362);
 			this.lbTrace.Name = "lbTrace";
-			this.lbTrace.Size = new System.Drawing.Size(690, 342);
+			this.lbTrace.Size = new System.Drawing.Size(686, 342);
 			this.lbTrace.TabIndex = 1;
 			this.lbTrace.Visible = false;
 			// 
@@ -457,10 +459,11 @@
 			// 
 			this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
 			this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-			this.ClientSize = new System.Drawing.Size(664, 361);
+			this.ClientSize = new System.Drawing.Size(694, 361);
 			this.Controls.Add(this.lbTrace);
 			this.Controls.Add(this.tabApplicationMode);
 			this.Name = "Main";
+			this.StartPosition = System.Windows.Forms.FormStartPosition.Manual;
 			this.Text = "Main";
 			this.Load += new System.EventHandler(this.Main_Load);
 			this.tabApplicationMode.ResumeLayout(false);
