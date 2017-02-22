@@ -67,7 +67,7 @@
     </Compile>
     <Compile Include="Models\FileChangeTypes.cs" />
     <Compile Include="Models\ThreadSafeList.cs" />
-    <Compile Include="Processors\InitialSyncProcessorHelper.cs" />
+    <Compile Include="Processors\InitialSyncHelper.cs" />
     <Compile Include="Processors\SyncProcessor.cs" />
     <Compile Include="APIs\MyFsWatcher.cs" />
     <Compile Include="Helper.cs" />

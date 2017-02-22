@@ -1,6 +1,8 @@
 ﻿using System;
 using System.IO;
 using System.Linq;
+using System.Runtime.Remoting.Messaging;
+using System.Threading;
 
 using ClientApplication.APIs;
 using ClientApplication.Models;
@@ -11,12 +13,12 @@ namespace ClientApplication.Processors
     {
         private int _dequeuedFilesCounter = 1;
 		public bool On { get; private set; }
-		private readonly CommandHandler _commandHandler;
-		private readonly ThreadSafeList<CustomFileHash> _changedFilesList;
+		private readonly TcpCommunication _myTcp;
+		private readonly ThreadSafeList<CustomFileHash> _changedFilesList; // GLOBAL
 
-		public SyncProcessor(CommandHandler commandHandler)
+		public SyncProcessor(TcpCommunication myTcp)
 		{
-			_commandHandler = commandHandler;
+			_myTcp = myTcp;
 			_changedFilesList = new ThreadSafeList<CustomFileHash>();
 		}
 
@@ -56,25 +58,25 @@ namespace ClientApplication.Processors
                                 {
                                     // Changes on CLIENT
                                     case FileChangeTypes.CreatedOnClient:
-										_commandHandler.Mkdir(fileHash.RelativePath);
+                                        _myTcp.Mkdir(fileHash.RelativePath);
                                         Logger.WriteLine(String.Format("{0}. Succes on dequeue: {1} ==> {2}",
                                             _dequeuedFilesCounter++, fileHash.RelativePath, fileHash.ChangeType));
                                         break;
 
                                     case FileChangeTypes.ChangedOnClient:
-										_commandHandler.Put(fileHash);
+                                       _myTcp.Put(fileHash);
                                         Logger.WriteLine(String.Format("{0}. Succes on dequeue: {1} ==> {2}",
                                             _dequeuedFilesCounter++, fileHash.RelativePath, fileHash.ChangeType));
                                         break;
 
                                     case FileChangeTypes.DeletedOnClient:
-										_commandHandler.Delete(fileHash.RelativePath);
+                                        _myTcp.Delete(fileHash.RelativePath);
                                         Logger.WriteLine(String.Format("{0}. Succes on dequeue: {1} ==> {2}",
                                             _dequeuedFilesCounter++, fileHash.RelativePath, fileHash.ChangeType));
                                         break;
 
                                     case FileChangeTypes.RenamedOnClient:
-										_commandHandler.Rename(fileHash.OldRelativePath, fileHash.RelativePath);
+                                        _myTcp.Rename(fileHash.OldRelativePath, fileHash.RelativePath);
                                         Logger.WriteLine(String.Format("{0}. Succes on dequeue: {1} renamed to {2}",
                                             _dequeuedFilesCounter++, fileHash.OldRelativePath, fileHash.RelativePath));
                                         break;
@@ -82,7 +84,7 @@ namespace ClientApplication.Processors
 
                                     // Changes on SERVER
                                     case FileChangeTypes.ChangedOnServer:
-										var fileCreated = _commandHandler.Get(fileHash.RelativePath);
+                                        var fileCreated = _myTcp.Get(fileHash.RelativePath);
                                         if (fileCreated)
                                         {
                                             Logger.WriteLine(String.Format("{0}. Succes on dequeue: {1} ==> {2}",

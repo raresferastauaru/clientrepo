@@ -16,14 +16,11 @@ namespace ClientApplication
     public partial class Main : Form
     {
         #region PrivateMembers 
-		private const string MyIp = "193.226.9.250";						//10.6.99.254 
-        private const string MyPort = "4445";								//4444
 
-	    private CommandHandler _commandHandler;
+		private const string MyIp = "193.226.9.250";			//10.6.99.254
+		private const string MyPort = "4445";					//4444
         private TcpCommunication _myTcp;
         private MyFsWatcher _myFsWatcher;
-
-
         private const Boolean UiConnectedState = true;
         private const Boolean UiDisconnectedState = false;
         #endregion PrivateMembers
@@ -83,7 +80,7 @@ namespace ClientApplication
         {
             try
             {
-				_commandHandler.Kill();
+                _myTcp.Kill();
                 _myTcp = null;
                 _myFsWatcher = null;
                 SwitchManualUiState(false);
@@ -103,7 +100,7 @@ namespace ClientApplication
                 var fullPath = Helper.SyncLocation + txtGetFileName.Text.Replace('/', '\\');
 	            var relPath = Helper.GetRelativePath(fullPath);
 
-				var response = _commandHandler.Get(txtGetFileName.Text);
+				var response = _myTcp.Get(txtGetFileName.Text);
                     
                 if (response)
                 {
@@ -146,7 +143,7 @@ namespace ClientApplication
         private void btnPutConfirm_Click(object sender, EventArgs e)
         {
             var chf = new CustomFileHash(txtPutPath.Text);
-			_commandHandler.Put(chf);
+            _myTcp.Put(chf);
         }
 
         private void btnRenameFromBrowse_Click(object sender, EventArgs e)
@@ -168,7 +165,7 @@ namespace ClientApplication
                 var oldFileName = txtRenameFrom.Text;
                 var newFileName = txtRenameTo.Text;
 
-				var success = _commandHandler.Rename(oldFileName, newFileName);
+                var success = _myTcp.Rename(oldFileName, newFileName);
                 
                 if (success)
                     MessageBox.Show("File " + oldFileName + " was renamed to " + newFileName + " succesfully!", @"Success!", MessageBoxButtons.OK);
@@ -183,7 +180,7 @@ namespace ClientApplication
         {
             try
             {
-				var success = _commandHandler.Delete(txtDeleteFileName.Text);
+                var success = _myTcp.Delete(txtDeleteFileName.Text);
 
                 if (success)
                     MessageBox.Show(@"File/directory " + txtDeleteFileName.Text + @" was deleted succesfully!", @"Success!", MessageBoxButtons.OK);
@@ -198,7 +195,7 @@ namespace ClientApplication
         {
             try
             {
-				var success = _commandHandler.Mkdir(txtNewFolderName.Text);
+                var success = _myTcp.Mkdir(txtNewFolderName.Text);
 
                 if (success)
                     MessageBox.Show(@"Folder " + txtDeleteFileName.Text + @" was created succesfully!", @"Success!", MessageBoxButtons.OK);
@@ -243,7 +240,7 @@ namespace ClientApplication
             try
             {
                 var str = string.Empty;
-				var fileHashes = _commandHandler.GetAllFileHashes();
+                var fileHashes = _myTcp.GetAllFileHashes();
                 fileHashes.ForEach(fh => str+= fh.ToString() + "\n\n");
 
                 var filePath = Application.StartupPath + "FileHashes.txt";
@@ -263,11 +260,13 @@ namespace ClientApplication
         {
             try
             {
-				Context.InAutoMode = true;
-				SwitchAutoUiState(UiConnectedState);
+                Context.InAutoMode = true;
 
+				_myTcp = new TcpCommunication(txtHostAuto.Text, Int32.Parse(txtPortAuto.Text));
 				StartLogger();
 				Task.Factory.StartNew(StartSynchroniser);
+                
+				SwitchAutoUiState(UiConnectedState);
             }
             catch (Exception ex)
 			{
@@ -278,28 +277,28 @@ namespace ClientApplication
 
 		private void StartSynchroniser()
 	    {
-		    _myTcp = new TcpCommunication(txtHostAuto.Text, Int32.Parse(txtPortAuto.Text));
-			_commandHandler = new CommandHandler(_myTcp);
+		    var syncProcessor = new SyncProcessor(_myTcp);
 
 			Logger.WriteInitialSyncBreakLine();
-			var syncProcessor = new SyncProcessor(_commandHandler);
 		    DetermineFilesForInitialSync().ForEach(syncProcessor.AddChangedFile);
-			var initialSyncTask = Task.Factory.StartNew(syncProcessor.ChangedFileManager());
-			initialSyncTask.Wait();
+			syncProcessor.ChangedFileManager();
+//			var initialSyncTask = Task.Factory.StartNew();
+//			initialSyncTask.Wait();
 
 			Logger.WriteSyncBreakLine();
 			_myFsWatcher = new MyFsWatcher(txtDefaultFolderAuto.Text, syncProcessor);
 	    }
 
-		private void StartLogger()
+
+		// Pune-l ca thread separat de la apel
+	    private void StartLogger()
 	    {
-			// On this implementation - on disconnect - the tracer will never be closed
 		    if (Helper.TraceEnabled)
 		    {
 			    Logger.InitLogger(true);
 			    Task.Factory.StartNew(() =>
 			    {
-					while (true)
+				    while (true)
 				    {
 					    Invoke((MethodInvoker) delegate
 					    {
@@ -313,10 +312,10 @@ namespace ClientApplication
 						    {
 							    Logger.WriteLine("Tracer error: " + ex.Message);
 						    }
-						});
+					    });
 					    Thread.Sleep(1000);
 				    }
-				});
+			    });
 		    }
 		    else Logger.InitLogger();
 	    }
@@ -329,8 +328,8 @@ namespace ClientApplication
 									.ToList();
 			paths.ForEach(path => clientFileHashes.Add(new CustomFileHash(path)));
 
-			var serverFilesHashes = _commandHandler.GetAllFileHashes();
-			var processedFileHashes = InitialSyncProcessorHelper.GetProcessedFileHashes(clientFileHashes, serverFilesHashes);
+			var serverFilesHashes = _myTcp.GetAllFileHashes();
+			var processedFileHashes = InitialSyncHelper.GetProcessedFileHashes(clientFileHashes, serverFilesHashes);
 
 			return processedFileHashes;
 		}
@@ -339,15 +338,17 @@ namespace ClientApplication
         {
             try
             {
-				_commandHandler.Kill();
+                _myTcp.Kill();
+
                 _myTcp.Dispose();
+                _myFsWatcher.Dispose();
 
 				SwitchAutoUiState(false);
             }
             catch (Exception ex)
 			{
 				SwitchAutoUiState(false);
-                MessageBox.Show(ex.Message + @"\n" + ex.StackTrace);
+                MessageBox.Show(ex.Message);
             }
         }
 
@@ -366,11 +367,11 @@ namespace ClientApplication
 
         private void SwitchAutoUiState(bool uiState)
         {
-	        if (Helper.TraceEnabled && uiState)
-	        {
+			if (Helper.TraceEnabled && uiState)
+			{
 				Height = 745;
 				lbTrace.Visible = true;
-	        }
+			}
 			else if (Helper.TraceEnabled && !uiState)
 			{
 				Height = 400;

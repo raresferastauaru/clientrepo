@@ -12,7 +12,6 @@ namespace ClientApplication
 			LogingLocation = ConfigurationManager.AppSettings["LogingLocation"] + "Log_" +
 								   DateTime.Now.ToShortDateString().Replace("/", "") + ".txt";
 			SyncLocation = ConfigurationManager.AppSettings["SyncLocation"];
-			StreamedPipeServerName = ConfigurationManager.AppSettings["StreamedPipeServerName"];
 			BufferSize = int.Parse(ConfigurationManager.AppSettings["BufferSize"]);
 		    TraceEnabled = bool.Parse(ConfigurationManager.AppSettings["TraceEnabled"]);
 
@@ -21,7 +20,6 @@ namespace ClientApplication
 
         public static string LogingLocation { get; private set; }
 		public static string SyncLocation { get; private set; }
-		public static string StreamedPipeServerName { get; private set; }
 		public static int BufferSize { get; private set; }
 		public static bool TraceEnabled { get; private set; }
 		public static List<string> TraceItems { get; set; } 
