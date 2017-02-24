@@ -19,7 +19,8 @@ namespace ClientApplication
 
 		private const string MyIp = "193.226.9.250";			//10.6.99.254
 		private const string MyPort = "4445";					//4444
-        private TcpCommunication _myTcp;
+		private TcpCommunication _myTcp;
+		private CommandHandler _commandHandler;
         private MyFsWatcher _myFsWatcher;
         private const Boolean UiConnectedState = true;
         private const Boolean UiDisconnectedState = false;
@@ -80,7 +81,7 @@ namespace ClientApplication
         {
             try
             {
-                _myTcp.Kill();
+//                _myTcp.Kill();
                 _myTcp = null;
                 _myFsWatcher = null;
                 SwitchManualUiState(false);
@@ -91,7 +92,7 @@ namespace ClientApplication
             }
         }
 
-        private void btnGetConfirm_Click(object sender, EventArgs e)
+        private async void btnGetConfirm_Click(object sender, EventArgs e)
         {
             if (String.IsNullOrEmpty(txtGetFileName.Text)) return;
             
@@ -100,7 +101,7 @@ namespace ClientApplication
                 var fullPath = Helper.SyncLocation + txtGetFileName.Text.Replace('/', '\\');
 	            var relPath = Helper.GetRelativePath(fullPath);
 
-				var response = _myTcp.Get(txtGetFileName.Text);
+				var response = await _commandHandler.Get(txtGetFileName.Text);
                     
                 if (response)
                 {
@@ -143,7 +144,7 @@ namespace ClientApplication
         private void btnPutConfirm_Click(object sender, EventArgs e)
         {
             var chf = new CustomFileHash(txtPutPath.Text);
-            _myTcp.Put(chf);
+			_commandHandler.Put(chf);
         }
 
         private void btnRenameFromBrowse_Click(object sender, EventArgs e)
@@ -158,14 +159,14 @@ namespace ClientApplication
                 txtRenameFrom.Text = dlg.FileName;
             }
         }
-        private void btnRenameConfirm_Click(object sender, EventArgs e)
+        private async void btnRenameConfirm_Click(object sender, EventArgs e)
         {
             try
             {
                 var oldFileName = txtRenameFrom.Text;
                 var newFileName = txtRenameTo.Text;
 
-                var success = _myTcp.Rename(oldFileName, newFileName);
+                var success = await _commandHandler.Rename(oldFileName, newFileName);
                 
                 if (success)
                     MessageBox.Show("File " + oldFileName + " was renamed to " + newFileName + " succesfully!", @"Success!", MessageBoxButtons.OK);
@@ -176,11 +177,11 @@ namespace ClientApplication
             }
         }
 
-        private void btnDeleteConfirm_Click(object sender, EventArgs e)
+        private async void btnDeleteConfirm_Click(object sender, EventArgs e)
         {
             try
             {
-                var success = _myTcp.Delete(txtDeleteFileName.Text);
+				var success = await _commandHandler.Delete(txtDeleteFileName.Text);
 
                 if (success)
                     MessageBox.Show(@"File/directory " + txtDeleteFileName.Text + @" was deleted succesfully!", @"Success!", MessageBoxButtons.OK);
@@ -191,11 +192,11 @@ namespace ClientApplication
             }
         }
 
-        private void btnNewFolderConfirm_Click(object sender, EventArgs e)
+        private async void btnNewFolderConfirm_Click(object sender, EventArgs e)
         {
             try
             {
-                var success = _myTcp.Mkdir(txtNewFolderName.Text);
+				var success = await _commandHandler.Mkdir(txtNewFolderName.Text);
 
                 if (success)
                     MessageBox.Show(@"Folder " + txtDeleteFileName.Text + @" was created succesfully!", @"Success!", MessageBoxButtons.OK);
@@ -235,12 +236,12 @@ namespace ClientApplication
             btnNewFolderConfirm.Enabled = uiState;
         }
 
-        private void btnGetFileHashes_Click(object sender, EventArgs e)
+        private async void btnGetFileHashes_Click(object sender, EventArgs e)
         {
             try
             {
                 var str = string.Empty;
-                var fileHashes = _myTcp.GetAllFileHashes();
+				var fileHashes = await _commandHandler.GetAllFileHashes();
                 fileHashes.ForEach(fh => str+= fh.ToString() + "\n\n");
 
                 var filePath = Application.StartupPath + "FileHashes.txt";
@@ -256,6 +257,7 @@ namespace ClientApplication
         #endregion Manual
 
         #region Auto
+
         private void btnConnectAuto_Click(object sender, EventArgs e)
         {
             try
@@ -263,6 +265,7 @@ namespace ClientApplication
                 Context.InAutoMode = true;
 
 				_myTcp = new TcpCommunication(txtHostAuto.Text, Int32.Parse(txtPortAuto.Text));
+	            _commandHandler = new CommandHandler(_myTcp);
 				StartLogger();
 				Task.Factory.StartNew(StartSynchroniser);
                 
@@ -275,22 +278,40 @@ namespace ClientApplication
             }
         }
 
-		private void StartSynchroniser()
+	    private async void StartSynchroniser()
 	    {
-		    var syncProcessor = new SyncProcessor(_myTcp);
+		    try
+		    {
+			    var syncProcessor = new SyncProcessor(_commandHandler);
 
-			Logger.WriteInitialSyncBreakLine();
-		    DetermineFilesForInitialSync().ForEach(syncProcessor.AddChangedFile);
-			syncProcessor.ChangedFileManager();
-//			var initialSyncTask = Task.Factory.StartNew();
-//			initialSyncTask.Wait();
+			    Logger.WriteInitialSyncBreakLine();
+			    var filesForInitialSync = await DetermineFilesForInitialSync();
+			    filesForInitialSync.ForEach(syncProcessor.AddChangedFile);
 
-			Logger.WriteSyncBreakLine();
-			_myFsWatcher = new MyFsWatcher(txtDefaultFolderAuto.Text, syncProcessor);
+			    var task = new Task(syncProcessor.ChangedFileManager);
+			    task.Start();
+			    task.Wait();
+
+			    Logger.WriteSyncBreakLine();
+			    _myFsWatcher = new MyFsWatcher(txtDefaultFolderAuto.Text, syncProcessor);
+		    }
+		    catch (FormatException fex)
+		    {
+			    var str = "Message: " + fex.Message +
+			              "\nSource: " + fex.Source +
+			              "\nStackTrace: " + fex.StackTrace;
+			    MessageBox.Show(str, @"FormatException - Syncroniser");
+		    }
+		    catch (Exception ex)
+		    {
+				var str = "Message: " + ex.Message +
+						  "\nSource: " + ex.Source +
+						  "\nStackTrace: " + ex.StackTrace;
+				MessageBox.Show(str, @"Exception - Syncroniser");
+		    }
 	    }
 
-
-		// Pune-l ca thread separat de la apel
+	    // Pune-l ca thread separat de la apel
 	    private void StartLogger()
 	    {
 		    if (Helper.TraceEnabled)
@@ -320,7 +341,7 @@ namespace ClientApplication
 		    else Logger.InitLogger();
 	    }
 
-	    private List<CustomFileHash> DetermineFilesForInitialSync()
+	    private async Task<List<CustomFileHash>> DetermineFilesForInitialSync()
 		{
 			var clientFileHashes = new List<CustomFileHash>();
 			var paths = Directory.GetFiles(Helper.SyncLocation, "*", SearchOption.AllDirectories)
@@ -328,7 +349,7 @@ namespace ClientApplication
 									.ToList();
 			paths.ForEach(path => clientFileHashes.Add(new CustomFileHash(path)));
 
-			var serverFilesHashes = _myTcp.GetAllFileHashes();
+			var serverFilesHashes = await _commandHandler.GetAllFileHashes();
 			var processedFileHashes = InitialSyncHelper.GetProcessedFileHashes(clientFileHashes, serverFilesHashes);
 
 			return processedFileHashes;
@@ -338,9 +359,7 @@ namespace ClientApplication
         {
             try
             {
-                _myTcp.Kill();
-
-                _myTcp.Dispose();
+				_commandHandler.Kill();
                 _myFsWatcher.Dispose();
 
 				SwitchAutoUiState(false);

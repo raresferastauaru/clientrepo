@@ -1,9 +1,7 @@
 ﻿using System;
 using System.IO;
 using System.Linq;
-using System.Runtime.Remoting.Messaging;
-using System.Threading;
-
+using System.Threading.Tasks;
 using ClientApplication.APIs;
 using ClientApplication.Models;
 
@@ -13,12 +11,12 @@ namespace ClientApplication.Processors
     {
         private int _dequeuedFilesCounter = 1;
 		public bool On { get; private set; }
-		private readonly TcpCommunication _myTcp;
-		private readonly ThreadSafeList<CustomFileHash> _changedFilesList; // GLOBAL
+		private readonly CommandHandler _commandHandler;
+		private readonly ThreadSafeList<CustomFileHash> _changedFilesList;
 
-		public SyncProcessor(TcpCommunication myTcp)
+		public SyncProcessor(CommandHandler commandHandler)
 		{
-			_myTcp = myTcp;
+			_commandHandler = commandHandler;
 			_changedFilesList = new ThreadSafeList<CustomFileHash>();
 		}
 
@@ -38,10 +36,8 @@ namespace ClientApplication.Processors
 			_changedFilesList.Remove(fileHash);
 		}
 
-        public Action ChangedFileManager()
+        public async void ChangedFileManager()
         {
-            return () =>
-            {
 				On = true;
                 while (true)
                 {
@@ -58,25 +54,25 @@ namespace ClientApplication.Processors
                                 {
                                     // Changes on CLIENT
                                     case FileChangeTypes.CreatedOnClient:
-                                        _myTcp.Mkdir(fileHash.RelativePath);
+										await _commandHandler.Mkdir(fileHash.RelativePath);
                                         Logger.WriteLine(String.Format("{0}. Succes on dequeue: {1} ==> {2}",
                                             _dequeuedFilesCounter++, fileHash.RelativePath, fileHash.ChangeType));
                                         break;
 
                                     case FileChangeTypes.ChangedOnClient:
-                                       _myTcp.Put(fileHash);
+										await _commandHandler.Put(fileHash);
                                         Logger.WriteLine(String.Format("{0}. Succes on dequeue: {1} ==> {2}",
                                             _dequeuedFilesCounter++, fileHash.RelativePath, fileHash.ChangeType));
                                         break;
 
                                     case FileChangeTypes.DeletedOnClient:
-                                        _myTcp.Delete(fileHash.RelativePath);
+										await _commandHandler.Delete(fileHash.RelativePath);
                                         Logger.WriteLine(String.Format("{0}. Succes on dequeue: {1} ==> {2}",
                                             _dequeuedFilesCounter++, fileHash.RelativePath, fileHash.ChangeType));
                                         break;
 
                                     case FileChangeTypes.RenamedOnClient:
-                                        _myTcp.Rename(fileHash.OldRelativePath, fileHash.RelativePath);
+										await _commandHandler.Rename(fileHash.OldRelativePath, fileHash.RelativePath);
                                         Logger.WriteLine(String.Format("{0}. Succes on dequeue: {1} renamed to {2}",
                                             _dequeuedFilesCounter++, fileHash.OldRelativePath, fileHash.RelativePath));
                                         break;
@@ -84,8 +80,8 @@ namespace ClientApplication.Processors
 
                                     // Changes on SERVER
                                     case FileChangeTypes.ChangedOnServer:
-                                        var fileCreated = _myTcp.Get(fileHash.RelativePath);
-                                        if (fileCreated)
+										var fileCreated = _commandHandler.Get(fileHash.RelativePath);
+                                        if (await fileCreated)
                                         {
                                             Logger.WriteLine(String.Format("{0}. Succes on dequeue: {1} ==> {2}",
                                                 _dequeuedFilesCounter++, fileHash.RelativePath, fileHash.ChangeType));
@@ -132,7 +128,6 @@ namespace ClientApplication.Processors
                         Logger.WriteLine("\t!!!\tEXCEPTION: on MyFSWatcher: " + ex.Message + "\t!!!");
                     }
                 }
-            };
         }
     }
 }

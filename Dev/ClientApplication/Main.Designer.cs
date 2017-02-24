@@ -449,7 +449,7 @@
 			this.lbTrace.FormattingEnabled = true;
 			this.lbTrace.Location = new System.Drawing.Point(4, 362);
 			this.lbTrace.Name = "lbTrace";
-			this.lbTrace.Size = new System.Drawing.Size(686, 342);
+			this.lbTrace.Size = new System.Drawing.Size(662 , 342);
 			this.lbTrace.TabIndex = 1;
 			this.lbTrace.Visible = false;
 			// 

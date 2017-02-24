@@ -1,9 +1,6 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.IO;
-using System.Linq;
 using System.Security.Permissions;
-using System.Threading;
 using System.Threading.Tasks;
 
 using ClientApplication.Models;
@@ -72,8 +69,11 @@ namespace ClientApplication.APIs
 			var fileHash = new CustomFileHash(fileChangeType, fullPath, oldFullPath);
 			_syncProcessor.AddChangedFile(fileHash);
 
-			if (!_syncProcessor.On)
-				Task.Factory.StartNew(_syncProcessor.ChangedFileManager());
+	        if (!_syncProcessor.On)
+	        {
+				var task = new Task(_syncProcessor.ChangedFileManager);
+				task.Start();
+	        }
 
 			Logger.WriteFileHash(_enqueuedFilesCounter++, fileHash);
         }
