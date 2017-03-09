@@ -36,12 +36,17 @@ namespace ClientApplication.Models
 
         IEnumerator IEnumerable.GetEnumerator() { return this.GetEnumerator(); }
 
+		public event EventHandler OnAdd;
         public void Add( T item ) {
             if ( Equals( default( T ), item ) ) {
                 return;
             }
             lock ( this._items ) {
-                this._items.Add( item );
+				this._items.Add(item);
+				if (null != OnAdd)
+				{
+					OnAdd(this, null);
+				}
             }
         }
 

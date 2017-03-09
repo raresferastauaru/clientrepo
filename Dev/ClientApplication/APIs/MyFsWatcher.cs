@@ -1,7 +1,6 @@
 ﻿using System;
 using System.IO;
 using System.Security.Permissions;
-using System.Threading.Tasks;
 
 using ClientApplication.Models;
 using ClientApplication.Processors;
@@ -11,8 +10,8 @@ namespace ClientApplication.APIs
     public class MyFsWatcher : IDisposable
 	{
 		private int _enqueuedFilesCounter = 1;
-		private readonly SyncProcessor _syncProcessor;
-        private readonly FileSystemWatcher _fileWatcher;
+		private SyncProcessor _syncProcessor;
+        private FileSystemWatcher _fileWatcher;
 
         [PermissionSet(SecurityAction.Demand, Name = "FullTrust")]
         public MyFsWatcher(String watcherPath, SyncProcessor syncProcessor)
@@ -33,6 +32,8 @@ namespace ClientApplication.APIs
         public void Dispose()
         {
             _fileWatcher.Dispose();
+	        _fileWatcher = null;
+	        _syncProcessor = null;
         }
 
         private void OnChanged(object source, FileSystemEventArgs e)
@@ -40,7 +41,6 @@ namespace ClientApplication.APIs
             switch (e.ChangeType)
             {
                 case WatcherChangeTypes.Created:
-					//if(Helper.IsDirectory(e.FullPath))
                     EnqueuingManager(FileChangeTypes.CreatedOnClient, e.FullPath);
                     break;
                 case WatcherChangeTypes.Changed:
@@ -48,7 +48,13 @@ namespace ClientApplication.APIs
                         EnqueuingManager(FileChangeTypes.ChangedOnClient, e.FullPath);
                     break;
                 case WatcherChangeTypes.Deleted:
-                    EnqueuingManager(FileChangeTypes.DeletedOnClient, e.FullPath);
+		            if (Helper.IsDirectory(e.FullPath))
+			            EnqueuingManager(FileChangeTypes.DeletedOnClient, e.FullPath);
+		            else
+		            {
+						if (e.FullPath != null && Directory.Exists(Path.GetDirectoryName(e.FullPath)))
+							EnqueuingManager(FileChangeTypes.DeletedOnClient, e.FullPath);
+		            }
                     break;
                 case WatcherChangeTypes.Renamed:
                     var rea = e as RenamedEventArgs;
@@ -61,7 +67,7 @@ namespace ClientApplication.APIs
         private void EnqueuingManager(FileChangeTypes fileChangeType, String fullPath, String oldFullPath = "")
 		{
 			var relativePath = Helper.GetRelativePath(fullPath);
-			if (_syncProcessor.InProcessingList(relativePath)) // && fileChangeType == FileChangeTypes.ChangedOnClient ???
+			if (_syncProcessor.InProcessingList(relativePath))
 			{
 				return;
 			}
@@ -69,46 +75,7 @@ namespace ClientApplication.APIs
 			var fileHash = new CustomFileHash(fileChangeType, fullPath, oldFullPath);
 			_syncProcessor.AddChangedFile(fileHash);
 
-	        if (!_syncProcessor.On)
-	        {
-				var task = new Task(_syncProcessor.ChangedFileManager);
-				task.Start();
-	        }
-
 			Logger.WriteFileHash(_enqueuedFilesCounter++, fileHash);
         }
     }
 }
-
-
-
-
-/*
-private void EnqueuingManager(FileChangeTypes fileChangeTypes, String fullPath, String oldFullPath = "")
-{
-//if(_syncProcessor.)
-//Task.Factory.StartNew(_syncProcessor.ChangedFileManager());
-	  
-	var relativePath = Helper.GetRelativePath(fullPath);
-	if (_syncProcessor.InProcessingList(relativePath))
-	{
-		if (fileChangeTypes == FileChangeTypes.RenamedOnClient)
-		{
-					
-		}
-		// File will always exists (you can't make a change on a file that doesn't exists :D)
-		else if (fileChangeTypes == FileChangeTypes.DeletedOnClient || !Helper.IsFileLocked(fullPath))
-		{
-			_syncProcessor.RemoveFileHash(relativePath);
-		}
-		else
-		{
-			return;
-		}
-	}
-
-	var fileHash = new CustomFileHash(fileChangeTypes, fullPath, oldFullPath);
-	_syncProcessor.AddChangedFile(fileHash);
-	Logger.WriteFileHash(_enqueuedFilesCounter++, fileHash);
-}
-*/

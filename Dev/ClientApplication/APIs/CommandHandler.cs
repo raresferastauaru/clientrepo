@@ -11,7 +11,7 @@ namespace ClientApplication.APIs
 {
 	public class CommandHandler: IDisposable
 	{
-		private readonly TcpCommunication _tcpCommunication;
+		private TcpCommunication _tcpCommunication;
 
 		public CommandHandler(TcpCommunication tcpCommunication)
 		{
@@ -19,7 +19,7 @@ namespace ClientApplication.APIs
 		}
 		public void Dispose()
 		{
-
+			_tcpCommunication = null;
 		}
 
 		public async Task<bool> Get(String relativePath)
@@ -47,18 +47,17 @@ namespace ClientApplication.APIs
 
 					var fullLength = offsetSize + messageParts[5].Length - 1;
 
+					// If we have some DataContent in the Acknowledge message we write that in the file.
 					var remainedMessageSize = fullLength - offsetSize;
 					var expectedSize = int.Parse(messageParts[1]);
-					// If we have some DataContent in the Acknowledge message we write that in the file.
 					if (remainedMessageSize > 0)
 					{
-						fileStream.Write(readMessage, offsetSize, remainedMessageSize); //readMessage.Length - 1);
+						fileStream.Write(readMessage, offsetSize, remainedMessageSize);
 						expectedSize -= remainedMessageSize;
 					}
 
 					// Writing the DataContent in file until we get the entire expected size.
-
-					await _tcpCommunication.CommandResponseBuffer.OutputAvailableAsync();									// you could change the expected size to WHILE(OutputAvailable)
+					await _tcpCommunication.CommandResponseBuffer.OutputAvailableAsync();
 					while (expectedSize > 0)
 					{
 						var buffer = _tcpCommunication.CommandResponseBuffer.Receive();
@@ -67,24 +66,20 @@ namespace ClientApplication.APIs
 					}
 				}
 
-				return ChangeFileAttributes(relativePath, messageParts[2], messageParts[3], messageParts[4]);
+				// Applying the file details.
+				return Helper.ChangeFileAttributes(relativePath, messageParts[2], messageParts[3], messageParts[4]);
 			}
 
-			// messageParts[1] should be "Error"
-			var message = messageParts[1] ?? "";
-			if (Context.InAutoMode)
-			{
-				Logger.WriteLine("Error message in GET Command: " + message);
-				return false;
-			}
-			throw new Exception(message);
+			if (!Context.InAutoMode) throw new Exception(messageParts[1]);
+			Logger.WriteLine("Error message in GET Command: " + messageParts[1]);
+			return false;
 		}
 
 		public async Task<bool> Put(CustomFileHash customFileHash)
 		{
 			// Prepare and send the PUT command
 			var fileSize = new FileInfo(customFileHash.FullLocalPath).Length;
-			var putCommandBytes = Encoding.Default.GetBytes("PUT:" + customFileHash.RelativePath + ":" + fileSize + ":");
+			var putCommandBytes = Encoding.Default.GetBytes("PUT:" + customFileHash.RelativePath + ":" + customFileHash.HashCode + ":" + fileSize + ":");
 			_tcpCommunication.SendCommand(putCommandBytes, 0, putCommandBytes.Length);
 
 			// Processing the response for the PUT command
@@ -127,8 +122,10 @@ namespace ClientApplication.APIs
 						Logger.WriteLine("The FileHash of \"" + customFileHash.RelativePath + "\" was sent successfully.");
 						return true;
 					}
-
-					message = messageParts[1];
+					else
+					{
+						message = messageParts[1];
+					}
 				}
 				else
 				{
@@ -140,7 +137,9 @@ namespace ClientApplication.APIs
 				message = messageParts[1];
 			}
 
-			throw new Exception(message);
+			if (!Context.InAutoMode) throw new Exception(message);
+			Logger.WriteLine("Error message in PUT Command: " + message);
+			return false;
 		}
 
 		public async Task<bool> Rename(String oldRelativePath, String newRelativePath)
@@ -150,6 +149,7 @@ namespace ClientApplication.APIs
 			_tcpCommunication.SendCommand(renameCommandBytes, 0, renameCommandBytes.Length);
 
 			// Processing the response for the requested rename
+			string message;
 			await _tcpCommunication.CommandResponseBuffer.OutputAvailableAsync();
 			var readMessage = _tcpCommunication.CommandResponseBuffer.Receive();
 			var messageParts = Encoding.ASCII.GetString(readMessage).Split(':');
@@ -163,10 +163,19 @@ namespace ClientApplication.APIs
 					Logger.WriteLine("File " + oldRelativePath + " was renamed to " + newRelativePath + " successfully.");
 					return true;
 				}
+				else
+				{
+					message = messageParts[1];
+				}
+			}
+			else
+			{
+				message = messageParts[1];
 			}
 
-			var errorMessage = messageParts[1];
-			throw new Exception(errorMessage);
+			if (!Context.InAutoMode) throw new Exception(message);
+			Logger.WriteLine("Error message in RENAME Command: " + message);
+			return false;
 		}
 
 		public async Task<bool> Delete(String relativePath)
@@ -182,8 +191,9 @@ namespace ClientApplication.APIs
 			if (messageParts[0].Equals("ACKNOWLEDGE"))
 				return true;
 
-			var errorMessage = messageParts[1];
-			throw new Exception(errorMessage);
+			if (!Context.InAutoMode) throw new Exception(messageParts[1]);
+			Logger.WriteLine("Error message in DELETE Command: " + messageParts[1]);
+			return false;
 		}
 
 		public async Task<bool> Mkdir(String folderName)
@@ -199,8 +209,9 @@ namespace ClientApplication.APIs
 			if (messageParts[0].Equals("ACKNOWLEDGE"))
 				return true;
 
-			var errorMessage = messageParts[1];
-			throw new Exception(errorMessage);
+			if (!Context.InAutoMode) throw new Exception(messageParts[1]);
+			Logger.WriteLine("Error message in MKDIR Command: " + messageParts[1]);
+			return false;
 		}
 
 		public void Kill()
@@ -235,42 +246,13 @@ namespace ClientApplication.APIs
 				foreach (var data in processedData)
 				{
 					var splits = data.Split(':');
-					serverFileHashes.Add(new CustomFileHash(FileChangeTypes.None, splits[0], splits[1], int.Parse(splits[2]), int.Parse(splits[3])));
+					serverFileHashes.Add(new CustomFileHash(FileChangeTypes.None, splits[0], splits[1], int.Parse(splits[2]), int.Parse(splits[3]), splits[4].Equals("1")));
 				}
 			}
-			else
-			{
-				var message = "Error message in GetAllFileHashes Command: " + receivedData.Split(':')[1];
 
-				if (Context.InAutoMode)
-					Logger.WriteLine(message);
-				else
-					throw new Exception(message);
-			}
-
+			if (!Context.InAutoMode) throw new Exception(receivedData.Split(':')[1]);
+			Logger.WriteLine("Error message in GetAllFileHashes Command: " + receivedData.Split(':')[1]);
 			return serverFileHashes;
-		}
-
-
-
-		private bool ChangeFileAttributes(string fileName, string creationTimeTicks, string lastWriteTimeTicks, string isReadOnlyString)
-		{
-			//try
-			var fullPath = Helper.GetLocalPath(fileName);
-			var creationTime = new DateTime(long.Parse(creationTimeTicks));
-			var lastWriteTime = new DateTime(long.Parse(lastWriteTimeTicks));
-			var isReadOnly = bool.Parse(isReadOnlyString);
-
-			File.SetCreationTimeUtc(fullPath, creationTime);
-			File.SetLastWriteTimeUtc(fullPath, lastWriteTime);
-
-			var fileAttributes = File.GetAttributes(fullPath);
-			if (isReadOnly)
-				fileAttributes |= FileAttributes.ReadOnly;
-
-			File.SetAttributes(fullPath, fileAttributes);
-			//catch(Exception ex) { return false; }
-			return true;
 		}
 	}
 }

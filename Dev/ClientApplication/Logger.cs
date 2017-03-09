@@ -58,8 +58,7 @@ namespace ClientApplication
         {
             try
             {
-                File.AppendAllText(Helper.LogingLocation,
-                     @"============================== Initial Sync Area ===================================\n\n");
+                File.AppendAllText(Helper.LogingLocation, "============================== Initial Sync Area ===================================\n\n");
             }
             catch (Exception ex)
             {
@@ -71,8 +70,7 @@ namespace ClientApplication
         {
             try
             {
-                File.AppendAllText(Helper.LogingLocation,
-                     @"\n============================== Sync Area ===================================\n\n");
+                File.AppendAllText(Helper.LogingLocation, "\n============================== Sync Area ===================================\n\n");
             }
             catch (Exception ex)
             {

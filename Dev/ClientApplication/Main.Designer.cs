@@ -57,6 +57,10 @@
 			this.label2 = new System.Windows.Forms.Label();
 			this.label1 = new System.Windows.Forms.Label();
 			this.tabAuto = new System.Windows.Forms.TabPage();
+			this.txtUserpassword = new System.Windows.Forms.TextBox();
+			this.lblUserpassword = new System.Windows.Forms.Label();
+			this.txtUsername = new System.Windows.Forms.TextBox();
+			this.lblUsername = new System.Windows.Forms.Label();
 			this.btnBrowseDefFolderAuto = new System.Windows.Forms.Button();
 			this.txtDefaultFolderAuto = new System.Windows.Forms.TextBox();
 			this.label6 = new System.Windows.Forms.Label();
@@ -349,6 +353,10 @@
 			// 
 			// tabAuto
 			// 
+			this.tabAuto.Controls.Add(this.txtUserpassword);
+			this.tabAuto.Controls.Add(this.lblUserpassword);
+			this.tabAuto.Controls.Add(this.txtUsername);
+			this.tabAuto.Controls.Add(this.lblUsername);
 			this.tabAuto.Controls.Add(this.btnBrowseDefFolderAuto);
 			this.tabAuto.Controls.Add(this.txtDefaultFolderAuto);
 			this.tabAuto.Controls.Add(this.label6);
@@ -366,9 +374,44 @@
 			this.tabAuto.Text = "Auto";
 			this.tabAuto.UseVisualStyleBackColor = true;
 			// 
+			// txtUserpassword
+			// 
+			this.txtUserpassword.Location = new System.Drawing.Point(127, 44);
+			this.txtUserpassword.Name = "txtUserpassword";
+			this.txtUserpassword.PasswordChar = '●';
+			this.txtUserpassword.Size = new System.Drawing.Size(141, 20);
+			this.txtUserpassword.TabIndex = 30;
+			this.txtUserpassword.Text = "passw1";
+			// 
+			// lblUserpassword
+			// 
+			this.lblUserpassword.AutoSize = true;
+			this.lblUserpassword.Location = new System.Drawing.Point(44, 47);
+			this.lblUserpassword.Name = "lblUserpassword";
+			this.lblUserpassword.Size = new System.Drawing.Size(77, 13);
+			this.lblUserpassword.TabIndex = 29;
+			this.lblUserpassword.Text = "User password";
+			// 
+			// txtUsername
+			// 
+			this.txtUsername.Location = new System.Drawing.Point(127, 18);
+			this.txtUsername.Name = "txtUsername";
+			this.txtUsername.Size = new System.Drawing.Size(141, 20);
+			this.txtUsername.TabIndex = 28;
+			this.txtUsername.Text = "rares";
+			// 
+			// lblUsername
+			// 
+			this.lblUsername.AutoSize = true;
+			this.lblUsername.Location = new System.Drawing.Point(63, 21);
+			this.lblUsername.Name = "lblUsername";
+			this.lblUsername.Size = new System.Drawing.Size(58, 13);
+			this.lblUsername.TabIndex = 27;
+			this.lblUsername.Text = "User name";
+			// 
 			// btnBrowseDefFolderAuto
 			// 
-			this.btnBrowseDefFolderAuto.Location = new System.Drawing.Point(576, 46);
+			this.btnBrowseDefFolderAuto.Location = new System.Drawing.Point(579, 96);
 			this.btnBrowseDefFolderAuto.Name = "btnBrowseDefFolderAuto";
 			this.btnBrowseDefFolderAuto.Size = new System.Drawing.Size(75, 20);
 			this.btnBrowseDefFolderAuto.TabIndex = 26;
@@ -378,7 +421,7 @@
 			// 
 			// txtDefaultFolderAuto
 			// 
-			this.txtDefaultFolderAuto.Location = new System.Drawing.Point(74, 46);
+			this.txtDefaultFolderAuto.Location = new System.Drawing.Point(77, 96);
 			this.txtDefaultFolderAuto.Name = "txtDefaultFolderAuto";
 			this.txtDefaultFolderAuto.Size = new System.Drawing.Size(415, 20);
 			this.txtDefaultFolderAuto.TabIndex = 25;
@@ -386,7 +429,7 @@
 			// label6
 			// 
 			this.label6.AutoSize = true;
-			this.label6.Location = new System.Drawing.Point(3, 50);
+			this.label6.Location = new System.Drawing.Point(6, 100);
 			this.label6.Name = "label6";
 			this.label6.Size = new System.Drawing.Size(73, 13);
 			this.label6.TabIndex = 24;
@@ -394,7 +437,7 @@
 			// 
 			// txtPortAuto
 			// 
-			this.txtPortAuto.Location = new System.Drawing.Point(358, 20);
+			this.txtPortAuto.Location = new System.Drawing.Point(361, 70);
 			this.txtPortAuto.Name = "txtPortAuto";
 			this.txtPortAuto.Size = new System.Drawing.Size(131, 20);
 			this.txtPortAuto.TabIndex = 23;
@@ -402,7 +445,7 @@
 			// label7
 			// 
 			this.label7.AutoSize = true;
-			this.label7.Location = new System.Drawing.Point(326, 23);
+			this.label7.Location = new System.Drawing.Point(329, 73);
 			this.label7.Name = "label7";
 			this.label7.Size = new System.Drawing.Size(26, 13);
 			this.label7.TabIndex = 22;
@@ -410,7 +453,7 @@
 			// 
 			// btnDisconnectAuto
 			// 
-			this.btnDisconnectAuto.Location = new System.Drawing.Point(576, 20);
+			this.btnDisconnectAuto.Location = new System.Drawing.Point(579, 70);
 			this.btnDisconnectAuto.Name = "btnDisconnectAuto";
 			this.btnDisconnectAuto.Size = new System.Drawing.Size(75, 20);
 			this.btnDisconnectAuto.TabIndex = 21;
@@ -420,7 +463,7 @@
 			// 
 			// btnConnectAuto
 			// 
-			this.btnConnectAuto.Location = new System.Drawing.Point(495, 20);
+			this.btnConnectAuto.Location = new System.Drawing.Point(498, 70);
 			this.btnConnectAuto.Name = "btnConnectAuto";
 			this.btnConnectAuto.Size = new System.Drawing.Size(75, 20);
 			this.btnConnectAuto.TabIndex = 20;
@@ -430,7 +473,7 @@
 			// 
 			// txtHostAuto
 			// 
-			this.txtHostAuto.Location = new System.Drawing.Point(74, 20);
+			this.txtHostAuto.Location = new System.Drawing.Point(77, 70);
 			this.txtHostAuto.Name = "txtHostAuto";
 			this.txtHostAuto.Size = new System.Drawing.Size(246, 20);
 			this.txtHostAuto.TabIndex = 19;
@@ -438,7 +481,7 @@
 			// label8
 			// 
 			this.label8.AutoSize = true;
-			this.label8.Location = new System.Drawing.Point(39, 23);
+			this.label8.Location = new System.Drawing.Point(42, 73);
 			this.label8.Name = "label8";
 			this.label8.Size = new System.Drawing.Size(29, 13);
 			this.label8.TabIndex = 18;
@@ -447,9 +490,9 @@
 			// lbTrace
 			// 
 			this.lbTrace.FormattingEnabled = true;
-			this.lbTrace.Location = new System.Drawing.Point(4, 362);
+			this.lbTrace.Location = new System.Drawing.Point(0, 359);
 			this.lbTrace.Name = "lbTrace";
-			this.lbTrace.Size = new System.Drawing.Size(662 , 342);
+			this.lbTrace.Size = new System.Drawing.Size(670, 342);
 			this.lbTrace.TabIndex = 1;
 			this.lbTrace.Visible = false;
 			// 
@@ -457,7 +500,7 @@
 			// 
 			this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
 			this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-			this.ClientSize = new System.Drawing.Size(664, 361);
+			this.ClientSize = new System.Drawing.Size(668, 360);
 			this.Controls.Add(this.lbTrace);
 			this.Controls.Add(this.tabApplicationMode);
 			this.Name = "Main";
@@ -514,6 +557,10 @@
         private System.Windows.Forms.Label label11;
         private System.Windows.Forms.Button btnGetFileHashes;
 		private System.Windows.Forms.ListBox lbTrace;
+		private System.Windows.Forms.TextBox txtUserpassword;
+		private System.Windows.Forms.Label lblUserpassword;
+		private System.Windows.Forms.TextBox txtUsername;
+		private System.Windows.Forms.Label lblUsername;
 
     }
 }

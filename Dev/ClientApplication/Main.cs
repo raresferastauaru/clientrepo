@@ -3,8 +3,11 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
+using System.Net.Sockets;
+using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
+using System.Threading.Tasks.Dataflow;
 using System.Windows.Forms;
 
 using ClientApplication.APIs;
@@ -19,11 +22,17 @@ namespace ClientApplication
 
 		private const string MyIp = "193.226.9.250";			//10.6.99.254
 		private const string MyPort = "4445";					//4444
-		private TcpCommunication _myTcp;
-		private CommandHandler _commandHandler;
-        private MyFsWatcher _myFsWatcher;
+
         private const Boolean UiConnectedState = true;
-        private const Boolean UiDisconnectedState = false;
+		private const Boolean UiDisconnectedState = false;
+
+		private TcpCommunication _tcpCommunication;
+		private CommandHandler _commandHandler;
+		private SyncProcessor _syncProcessor;
+		private MyFsWatcher _myFsWatcher;
+
+//		private readonly CancellationTokenSource _tokenSource = new CancellationTokenSource();
+//		private CancellationToken _cancelationToken;
         #endregion PrivateMembers
 
         #region FormOperations
@@ -67,8 +76,12 @@ namespace ClientApplication
         {
             try
             {
-                Context.InAutoMode = false;
-                _myTcp = new TcpCommunication(txtHost.Text, Int32.Parse(txtPort.Text));
+				Context.InAutoMode = false;
+				
+				var tcpClient = new TcpClient(txtHostAuto.Text, Int32.Parse(txtPortAuto.Text));
+				var tcpCommunication = new TcpCommunication(tcpClient);
+				_commandHandler = new CommandHandler(tcpCommunication);
+
                 SwitchManualUiState(UiConnectedState);
             }
             catch (Exception ex)
@@ -81,9 +94,7 @@ namespace ClientApplication
         {
             try
             {
-//                _myTcp.Kill();
-                _myTcp = null;
-                _myFsWatcher = null;
+				_commandHandler.Kill();
                 SwitchManualUiState(false);
             }
             catch (Exception ex)
@@ -141,10 +152,10 @@ namespace ClientApplication
             }
         }
 
-        private void btnPutConfirm_Click(object sender, EventArgs e)
+        private async void btnPutConfirm_Click(object sender, EventArgs e)
         {
             var chf = new CustomFileHash(txtPutPath.Text);
-			_commandHandler.Put(chf);
+			await _commandHandler.Put(chf);
         }
 
         private void btnRenameFromBrowse_Click(object sender, EventArgs e)
@@ -258,87 +269,113 @@ namespace ClientApplication
 
         #region Auto
 
-        private void btnConnectAuto_Click(object sender, EventArgs e)
+	    private Task _loggerTask;
+
+	    private async void btnConnectAuto_Click(object sender, EventArgs e)
         {
             try
             {
                 Context.InAutoMode = true;
 
-				_myTcp = new TcpCommunication(txtHostAuto.Text, Int32.Parse(txtPortAuto.Text));
-	            _commandHandler = new CommandHandler(_myTcp);
-				StartLogger();
-				Task.Factory.StartNew(StartSynchroniser);
-                
-				SwitchAutoUiState(UiConnectedState);
-            }
-            catch (Exception ex)
+	            if (Helper.TraceEnabled)
+	            {
+		            Logger.InitLogger(true);
+//		            _cancelationToken = _tokenSource.Token;
+					_loggerTask = Task.Factory.StartNew(LoggerAction);//, _cancelationToken);
+	            }
+	            else
+	            {
+		            Logger.InitLogger();
+		            _loggerTask = null;
+	            }
+
+				var changedFilesList = new ThreadSafeList<CustomFileHash>();
+				var commandResponseBuffer = new BufferBlock<byte[]>();
+
+				var tcpClient = new TcpClient(txtHostAuto.Text, Int32.Parse(txtPortAuto.Text));
+				_tcpCommunication = new TcpCommunication(tcpClient, commandResponseBuffer, changedFilesList);
+
+
+				var connectionBytes = Encoding.UTF8.GetBytes(txtUsername.Text + ":" + txtUserpassword.Text + ":");
+				_tcpCommunication.SendCommand(connectionBytes, 0, connectionBytes.Length);
+				await _tcpCommunication.CommandResponseBuffer.OutputAvailableAsync();
+				var response = _tcpCommunication.CommandResponseBuffer.Receive();
+				var message = Encoding.UTF8.GetString(response).Split(':');
+	            if (message[0].Equals("Error"))
+	            {
+		            MessageBox.Show(message[1], @"Invalid user or password");
+		            _tcpCommunication.Dispose();
+	            }
+	            else
+				{
+					_commandHandler = new CommandHandler(_tcpCommunication);
+
+					Logger.WriteInitialSyncBreakLine();
+					var filesForInitialSync = await DetermineFilesForInitialSync();
+					_syncProcessor = new SyncProcessor(_commandHandler, changedFilesList);
+					filesForInitialSync.ForEach(_syncProcessor.AddChangedFile);
+					_syncProcessor.ChangedFileManager();
+
+					Logger.WriteSyncBreakLine();
+					SwitchAutoUiState(UiConnectedState);
+
+					changedFilesList.OnAdd += changedFilesList_OnAdd;
+					_myFsWatcher = new MyFsWatcher(txtDefaultFolderAuto.Text, _syncProcessor);
+	            }
+			}
+			catch (FormatException fex)
 			{
+				var str = "Message: " + fex.Message +
+						  "\nSource: " + fex.Source +
+						  "\nStackTrace: " + fex.StackTrace;
+				MessageBox.Show(str, @"Syncroniser - FormatException");
 				SwitchAutoUiState(false);
-	            MessageBox.Show(ex.Message);
-            }
-        }
-
-	    private async void StartSynchroniser()
-	    {
-		    try
-		    {
-			    var syncProcessor = new SyncProcessor(_commandHandler);
-
-			    Logger.WriteInitialSyncBreakLine();
-			    var filesForInitialSync = await DetermineFilesForInitialSync();
-			    filesForInitialSync.ForEach(syncProcessor.AddChangedFile);
-
-			    var task = new Task(syncProcessor.ChangedFileManager);
-			    task.Start();
-			    task.Wait();
-
-			    Logger.WriteSyncBreakLine();
-			    _myFsWatcher = new MyFsWatcher(txtDefaultFolderAuto.Text, syncProcessor);
-		    }
-		    catch (FormatException fex)
-		    {
-			    var str = "Message: " + fex.Message +
-			              "\nSource: " + fex.Source +
-			              "\nStackTrace: " + fex.StackTrace;
-			    MessageBox.Show(str, @"FormatException - Syncroniser");
-		    }
-		    catch (Exception ex)
-		    {
+				MessageBox.Show(fex.Message);
+			}
+			catch (Exception ex)
+			{
 				var str = "Message: " + ex.Message +
 						  "\nSource: " + ex.Source +
 						  "\nStackTrace: " + ex.StackTrace;
-				MessageBox.Show(str, @"Exception - Syncroniser");
-		    }
-	    }
+				MessageBox.Show(str, @"Syncroniser - Exception");
+				SwitchAutoUiState(false);
+				MessageBox.Show(ex.Message);
+			}
+        }
 
-	    // Pune-l ca thread separat de la apel
-	    private void StartLogger()
-	    {
-		    if (Helper.TraceEnabled)
-		    {
-			    Logger.InitLogger(true);
-			    Task.Factory.StartNew(() =>
-			    {
-				    while (true)
-				    {
-					    Invoke((MethodInvoker) delegate
-					    {
-						    try
-						    {
-							    if (lbTrace.Items.Count > 0)
-								    lbTrace.Items.Clear();
-							    Helper.TraceItems.ForEach(i => lbTrace.Items.Add(i));
-						    }
-						    catch (Exception ex)
-						    {
-							    Logger.WriteLine("Tracer error: " + ex.Message);
-						    }
-					    });
-					    Thread.Sleep(1000);
-				    }
-			    });
-		    }
-		    else Logger.InitLogger();
+	    private void changedFilesList_OnAdd(object sender, EventArgs e)
+		{
+		    if (_syncProcessor.On) return;
+
+		    var task = new Task(_syncProcessor.ChangedFileManager);
+		    task.Start();
+		}
+
+	    private void LoggerAction()
+		{
+			while (true)
+			{
+				Invoke((MethodInvoker)delegate
+				{
+					try
+					{
+						if (lbTrace.Items.Count > 0)
+							lbTrace.Items.Clear();
+						Helper.TraceItems.ForEach(i => lbTrace.Items.Add(i));
+					}
+					catch (Exception ex)
+					{
+						Logger.WriteLine("Tracer error: " + ex.Message);
+					}
+
+//					if (_cancelationToken.IsCancellationRequested)
+//					{
+//						// Clean up here, then...
+//						_cancelationToken.ThrowIfCancellationRequested();
+//					}
+				});
+				Thread.Sleep(1000);
+			}
 	    }
 
 	    private async Task<List<CustomFileHash>> DetermineFilesForInitialSync()
@@ -358,16 +395,29 @@ namespace ClientApplication
         private void btnDisconnectAuto_Click(object sender, EventArgs e)
         {
             try
-            {
+			{
+//				if (_loggerTask != null)
+//					_tokenSource.Cancel();
+
+				_syncProcessor.Dispose();
+				_syncProcessor = null;
+
 				_commandHandler.Kill();
-                _myFsWatcher.Dispose();
+				_commandHandler.Dispose();
+				_commandHandler = null;
+
+				_tcpCommunication.Dispose();
+				_tcpCommunication = null;
+
+				_myFsWatcher.Dispose();
+				_myFsWatcher = null;
 
 				SwitchAutoUiState(false);
             }
             catch (Exception ex)
 			{
 				SwitchAutoUiState(false);
-                MessageBox.Show(ex.Message);
+				MessageBox.Show(ex.Message, @"Disconnect");
             }
         }
 

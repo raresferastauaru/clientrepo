@@ -11,14 +11,16 @@ namespace ClientApplication.Models
         #region Properties
         public FileChangeTypes ChangeType { get; private set; }
         public string FullLocalPath { get; private set; }
-        public string RelativePath { get; private set; }
-        public string OldRelativePath { get; private set; }
+		public string RelativePath { get; private set; }
+		public string OldFullLocalPath { get; private set; }
+		public string OldRelativePath { get; private set; }
         public int HashCode { get; private set; }
         public int OldHashCode { get; private set; }
-        public bool WasReadOnly { get; private set; }
+		public bool WasReadOnly { get; private set; }
+		public bool IsDeleted { get; private set; }
         public long Size { get; private set; }
         public FileInfo FileInfo { get; private set; }
-        #endregion Properties
+	    #endregion Properties
 
         #region Constructors
         /// <summary>
@@ -44,16 +46,18 @@ namespace ClientApplication.Models
         /// </summary>
         /// <param name="changeType"></param>
         /// <param name="fullLocalPath"></param>
-        /// <param name="oldFullPath"></param>
-        public CustomFileHash(FileChangeTypes changeType, string fullLocalPath, string oldFullPath = "")
+		/// <param name="oldFullLocalPath"></param>
+        public CustomFileHash(FileChangeTypes changeType, string fullLocalPath, string oldFullLocalPath = "")
         {
             ChangeType = changeType;
             FullLocalPath = fullLocalPath;
             RelativePath = Helper.GetRelativePath(fullLocalPath);
             FileInfo = new FileInfo(FullLocalPath);
 
-            if (changeType == FileChangeTypes.RenamedOnClient)
-                OldRelativePath = Helper.GetRelativePath(oldFullPath);
+			if (changeType == FileChangeTypes.RenamedOnClient)
+				OldRelativePath = Helper.GetRelativePath(oldFullLocalPath);
+			if (changeType == FileChangeTypes.RenamedOnServer)
+				OldFullLocalPath = oldFullLocalPath;
 
             if (!File.Exists(FullLocalPath)) return;
 
@@ -77,18 +81,20 @@ namespace ClientApplication.Models
         /// <param name="changeType"></param>
         /// <param name="relativePath"></param>
         /// <param name="oldRelativePath"></param>
-        /// <param name="hashCode"></param>
-        /// <param name="oldHashCode"></param>
+		/// <param name="hashCode"></param>
+		/// <param name="oldHashCode"></param>
+		/// <param name="isDeleted"></param>
         public CustomFileHash(FileChangeTypes changeType, string relativePath, string oldRelativePath, 
-            int hashCode, int oldHashCode)
+            int hashCode, int oldHashCode, bool isDeleted = false)
         {
             ChangeType = changeType;
             RelativePath = relativePath;
             OldRelativePath = oldRelativePath;
             HashCode = hashCode;
             OldHashCode = oldHashCode;
+	        IsDeleted = isDeleted;
 
-            if (changeType == FileChangeTypes.ChangedOnClient || changeType == FileChangeTypes.ChangedOnServer)
+            if (changeType == FileChangeTypes.ChangedOnClient || changeType == FileChangeTypes.ChangedOnServer || changeType == FileChangeTypes.DeletedOnServer)
                 FullLocalPath = Helper.GetLocalPath(RelativePath);
 
             if (File.Exists(FullLocalPath))
@@ -136,10 +142,13 @@ namespace ClientApplication.Models
 
 		public string Stuff()
 		{
-			var str = HashCode + ":"
-					  + FileInfo.CreationTime + ":"
-					  + FileInfo.LastWriteTime + ":"
-					  + FileInfo.IsReadOnly + ":";
+			var str = HashCode + ":";
+			if (FileInfo != null)
+			{
+				str += FileInfo.CreationTime + ":"
+					+ FileInfo.LastWriteTime + ":"
+					+ FileInfo.IsReadOnly + ":";
+			}
 			return str;
 		}
 

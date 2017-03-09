@@ -10,7 +10,7 @@ namespace ClientApplication
 	    static Helper()
 	    {
 			LogingLocation = ConfigurationManager.AppSettings["LogingLocation"] + "Log_" +
-								   DateTime.Now.ToShortDateString().Replace("/", "") + ".txt";
+								   DateTime.Now.ToShortDateString().Replace("/", "_") + ".txt";
 			SyncLocation = ConfigurationManager.AppSettings["SyncLocation"];
 			BufferSize = int.Parse(ConfigurationManager.AppSettings["BufferSize"]);
 		    TraceEnabled = bool.Parse(ConfigurationManager.AppSettings["TraceEnabled"]);
@@ -33,12 +33,20 @@ namespace ClientApplication
         {
             return String.Format("{0}{1}", SyncLocation, relativePath.Replace('/', '\\'));
         }
+		
+	    public static bool IsDirectory(String path)
+	    {
+		    try
+		    {
+			    return ((File.GetAttributes(path) & FileAttributes.Directory) != 0);
+		    }
+		    catch (FileNotFoundException) // when?
+		    {
+			    return false;
+		    } 
+	    }
 
-        public static bool IsDirectory(String path)
-        {
-            return ((File.GetAttributes(path) & FileAttributes.Directory) != 0);
-        }
-        public static bool IsFileLocked(String fullPath)
+	    public static bool IsFileLocked(String fullPath)
         {
             var fileInfo = new FileInfo(fullPath);
             FileStream stream = null;
@@ -91,43 +99,24 @@ namespace ClientApplication
             if (!Directory.Exists(fullPath))
                 Directory.CreateDirectory(fullPath);
         }
+		public static bool ChangeFileAttributes(string fileName, string creationTimeTicks, string lastWriteTimeTicks, string isReadOnlyString)
+		{
+			//try
+			var fullPath = Helper.GetLocalPath(fileName);
+			var creationTime = new DateTime(long.Parse(creationTimeTicks));
+			var lastWriteTime = new DateTime(long.Parse(lastWriteTimeTicks));
+			var isReadOnly = bool.Parse(isReadOnlyString);
 
+			File.SetCreationTimeUtc(fullPath, creationTime);
+			File.SetLastWriteTimeUtc(fullPath, lastWriteTime);
+
+			var fileAttributes = File.GetAttributes(fullPath);
+			if (isReadOnly)
+				fileAttributes |= FileAttributes.ReadOnly;
+
+			File.SetAttributes(fullPath, fileAttributes);
+			//catch(Exception ex) { return false; }
+			return true;
+		}
     }
 }
-
-
-
-
-
-
-
-
-
-//        public static List<InitialSyncFileHash> GetFilesHashes(List<string> paths)
-//        {
-//            var initialSyncFileHashes = new List<InitialSyncFileHash>();
-//            using (var md5 = System.Security.Cryptography.MD5.Create())
-//            {
-//                foreach (var path in paths)
-//                {
-//                    using (var stream = File.OpenRead(path))
-//                    {
-//                        var info = new FileInfo(path);
-//                        var infoStr = info.CreationTime.ToString(CultureInfo.InvariantCulture)
-//                                      + info.LastWriteTime.ToString()
-//                                      + info.Attributes.ToString()
-//                                      + info.IsReadOnly.ToString();
-//
-//                        var infoHash = infoStr.GetHashCode();
-//
-//                        var md5Hash = BitConverter.ToInt32(md5.ComputeHash(stream), 0);
-//
-//                        md5Hash += infoHash;
-//
-//                        initialSyncFileHashes.Add(new InitialSyncFileHash(path, md5Hash.GetHashCode()));
-//                    }
-//                }
-//            }
-//
-//            return initialSyncFileHashes;
-//        }
