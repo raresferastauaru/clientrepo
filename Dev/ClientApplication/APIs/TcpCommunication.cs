@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Net.Sockets;
@@ -10,7 +9,6 @@ using System.Threading.Tasks;
 using System.Threading.Tasks.Dataflow;
 using System.Windows.Forms;
 using ClientApplication.Models;
-using ClientApplication.Processors;
 
 namespace ClientApplication.APIs
 {
@@ -82,7 +80,7 @@ namespace ClientApplication.APIs
 					    var readBytes = _networkStream.Read(buffer, 0, Helper.BufferSize);
 					    buffer = buffer.Take(readBytes).ToArray();
 
-					    var readData = Encoding.Default.GetString(buffer, 0, readBytes);
+					    var readData = Encoding.UTF8.GetString(buffer, 0, readBytes);
 					    var splitedData = readData.Split(':').ToList();
 
 					    var pushNotification = splitedData.Any(s => s.Equals("PUSHNOTIFICATION"));
@@ -228,7 +226,7 @@ namespace ClientApplication.APIs
 		    {
 			    var dataBeforeEocr = buffer.Take(bytesBeforeEocr).ToArray();
 
-			    if (dataBeforeEocr[dataBeforeEocr.Length - 1] == Encoding.Default.GetBytes(":")[0])
+			    if (dataBeforeEocr[dataBeforeEocr.Length - 1] == Encoding.UTF8.GetBytes(":")[0])
 				    dataBeforeEocr = dataBeforeEocr.Take(dataBeforeEocr.Length - 1).ToArray();
 
 			    CommandResponseBuffer.Post(dataBeforeEocr);

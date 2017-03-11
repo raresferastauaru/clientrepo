@@ -31,8 +31,8 @@ namespace ClientApplication
 		private SyncProcessor _syncProcessor;
 		private MyFsWatcher _myFsWatcher;
 
-//		private readonly CancellationTokenSource _tokenSource = new CancellationTokenSource();
-//		private CancellationToken _cancelationToken;
+		//private readonly CancellationTokenSource _tokenSource = new CancellationTokenSource();
+		//private CancellationToken _cancelationToken;
         #endregion PrivateMembers
 
         #region FormOperations
@@ -268,7 +268,6 @@ namespace ClientApplication
         #endregion Manual
 
         #region Auto
-
 	    private Task _loggerTask;
 
 	    private async void btnConnectAuto_Click(object sender, EventArgs e)
@@ -355,26 +354,30 @@ namespace ClientApplication
 		{
 			while (true)
 			{
-				Invoke((MethodInvoker)delegate
+				try
 				{
-					try
+					Invoke((MethodInvoker) delegate
 					{
-						if (lbTrace.Items.Count > 0)
-							lbTrace.Items.Clear();
-						Helper.TraceItems.ForEach(i => lbTrace.Items.Add(i));
-					}
-					catch (Exception ex)
-					{
-						Logger.WriteLine("Tracer error: " + ex.Message);
-					}
+						try
+						{
+							if (lbTrace.Items.Count > 0)
+								lbTrace.Items.Clear();
+							Helper.TraceItems.ForEach(i => lbTrace.Items.Add(i));
+						}
+						catch (Exception ex)
+						{
+							Logger.WriteLine("Tracer error: " + ex.Message);
+						}
 
-//					if (_cancelationToken.IsCancellationRequested)
-//					{
-//						// Clean up here, then...
-//						_cancelationToken.ThrowIfCancellationRequested();
-//					}
-				});
-				Thread.Sleep(1000);
+						//if (_cancelationToken.IsCancellationRequested)
+						//	_cancelationToken.ThrowIfCancellationRequested();
+					});
+					Thread.Sleep(1000);
+				}
+				catch (Exception)
+				{
+					return;
+				}
 			}
 	    }
 

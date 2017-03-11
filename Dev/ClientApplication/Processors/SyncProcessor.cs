@@ -90,15 +90,11 @@ namespace ClientApplication.Processors
                                 case FileChangeTypes.ChangedOnServer:
 									var fileCreated = _commandHandler.Get(fileHash.RelativePath);
                                     if (await fileCreated)
-                                    {
                                         Logger.WriteLine(String.Format("{0}. Succes on dequeue: {1} ==> {2}",
                                             _dequeuedFilesCounter++, fileHash.RelativePath, fileHash.ChangeType));
-                                    }
                                     else
-                                    {
                                         Logger.WriteLine(String.Format("{0}. Fail on dequeue: {1} ==> {2}\n(File was empty on server, or something else..)",
                                             _dequeuedFilesCounter++, fileHash.RelativePath, fileHash.ChangeType));
-                                    }
                                     break;
 
                                 case FileChangeTypes.DeletedOnServer:
@@ -110,14 +106,14 @@ namespace ClientApplication.Processors
 		                            }
 		                            else
 		                            {
-										Logger.WriteLine(String.Format("{0}. Fail on dequeue: {1} ==> {2}\n(File doesn't exist..)",
+										Logger.WriteLine(String.Format("{0}. Fail on dequeue: {1} ==> {2}\n(File " + fileHash.FullLocalPath + "doesn't exist)",
 											_dequeuedFilesCounter++, fileHash.RelativePath, fileHash.ChangeType));
 		                            }
                                     break;
 
                                 case FileChangeTypes.RenamedOnServer:
 		                            File.Move(fileHash.OldFullLocalPath, fileHash.FullLocalPath);
-									Logger.WriteLine(String.Format("{0}. Succes on dequeue ?: {1} ==> {2}",
+									Logger.WriteLine(String.Format("{0}. Succes on dequeue: {1} ==> {2}",
 										_dequeuedFilesCounter++, fileHash.RelativePath, fileHash.ChangeType));
 		                            break;
                             }
@@ -131,8 +127,6 @@ namespace ClientApplication.Processors
                     }
                     else
                     {
-                        // The queue is EMPTY or the processor is blocked.. wait 1 sec and then check for changes
-                        // Thread.Sleep(1000);
 	                    On = false;
 						return;
                     }
@@ -140,11 +134,9 @@ namespace ClientApplication.Processors
                 catch (Exception ex)
                 {
 	                if (fileHash != null)
-	                {
 		                _changedFilesList.Remove(fileHash);
-	                }
 
-                    Logger.WriteLine("\t!!!\tEXCEPTION: on MyFSWatcher: " + ex.Message + "\t!!!");
+                    Logger.WriteLine("!!! EXCEPTION on MyFSWatcher: " + ex.Message + "!!!");
                 }
             }
         }

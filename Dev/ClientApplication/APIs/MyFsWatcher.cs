@@ -52,7 +52,8 @@ namespace ClientApplication.APIs
 			            EnqueuingManager(FileChangeTypes.DeletedOnClient, e.FullPath);
 		            else
 		            {
-						if (e.FullPath != null && Directory.Exists(Path.GetDirectoryName(e.FullPath)))
+			            var path = Path.GetDirectoryName(e.FullPath);
+						if (path != null && Directory.Exists(path))
 							EnqueuingManager(FileChangeTypes.DeletedOnClient, e.FullPath);
 		            }
                     break;

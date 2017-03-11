@@ -25,12 +25,12 @@ namespace ClientApplication.APIs
 		public async Task<bool> Get(String relativePath)
 		{
 			// Prepare and send the GET command
-			var getCommandBytes = Encoding.Default.GetBytes("GET:" + relativePath + ":");
+			var getCommandBytes = Encoding.UTF8.GetBytes("GET:" + relativePath + ":");
 			_tcpCommunication.SendCommand(getCommandBytes, 0, getCommandBytes.Count());
 
 			await _tcpCommunication.CommandResponseBuffer.OutputAvailableAsync();
 			var readMessage = _tcpCommunication.CommandResponseBuffer.Receive();
-			var messageParts = Encoding.Default.GetString(readMessage).Split(':');
+			var messageParts = Encoding.UTF8.GetString(readMessage).Split(':');
 
 			// If we get Acknowledge => the file exists. Beside this, we get the file details.
 			if (messageParts[0].Equals("ACKNOWLEDGE"))
@@ -79,14 +79,14 @@ namespace ClientApplication.APIs
 		{
 			// Prepare and send the PUT command
 			var fileSize = new FileInfo(customFileHash.FullLocalPath).Length;
-			var putCommandBytes = Encoding.Default.GetBytes("PUT:" + customFileHash.RelativePath + ":" + customFileHash.HashCode + ":" + fileSize + ":");
+			var putCommandBytes = Encoding.UTF8.GetBytes("PUT:" + customFileHash.RelativePath + ":" + customFileHash.HashCode + ":" + fileSize + ":");
 			_tcpCommunication.SendCommand(putCommandBytes, 0, putCommandBytes.Length);
 
 			// Processing the response for the PUT command
 			string message;
 			await _tcpCommunication.CommandResponseBuffer.OutputAvailableAsync();
 			var readMessage = _tcpCommunication.CommandResponseBuffer.Receive();
-			var messageParts = Encoding.ASCII.GetString(readMessage).Split(':');
+			var messageParts = Encoding.UTF8.GetString(readMessage).Split(':');
 			if (messageParts[0].Equals("ACKNOWLEDGE"))
 			{
 				// Sending the entire DataContent
@@ -105,18 +105,18 @@ namespace ClientApplication.APIs
 				// Processing the response for sent data
 				await _tcpCommunication.CommandResponseBuffer.OutputAvailableAsync();
 				readMessage = _tcpCommunication.CommandResponseBuffer.Receive();
-				messageParts = Encoding.ASCII.GetString(readMessage).Split(':');
+				messageParts = Encoding.UTF8.GetString(readMessage).Split(':');
 				if (messageParts[0].Equals("ACKNOWLEDGE"))
 				{
 					// Sending the FileHashDetails for the transmited data
 					Logger.WriteLine(customFileHash.GetFileHashDetails());
-					var fileHashDetails = Encoding.Default.GetBytes(customFileHash.GetFileHashDetails());
+					var fileHashDetails = Encoding.UTF8.GetBytes(customFileHash.GetFileHashDetails());
 					_tcpCommunication.SendCommand(fileHashDetails, 0, fileHashDetails.Length);
 
 					// Processing the response for the FileHashDetails that were sent
 					await _tcpCommunication.CommandResponseBuffer.OutputAvailableAsync();
 					readMessage = _tcpCommunication.CommandResponseBuffer.Receive();
-					messageParts = Encoding.ASCII.GetString(readMessage).Split(':');
+					messageParts = Encoding.UTF8.GetString(readMessage).Split(':');
 					if (messageParts[0].Equals("ACKNOWLEDGE"))
 					{
 						Logger.WriteLine("The FileHash of \"" + customFileHash.RelativePath + "\" was sent successfully.");
@@ -145,19 +145,19 @@ namespace ClientApplication.APIs
 		public async Task<bool> Rename(String oldRelativePath, String newRelativePath)
 		{
 			// Prepare and send the RENAME command
-			var renameCommandBytes = Encoding.Default.GetBytes("RENAME:" + oldRelativePath + ":" + newRelativePath + ":");
+			var renameCommandBytes = Encoding.UTF8.GetBytes("RENAME:" + oldRelativePath + ":" + newRelativePath + ":");
 			_tcpCommunication.SendCommand(renameCommandBytes, 0, renameCommandBytes.Length);
 
 			// Processing the response for the requested rename
 			string message;
 			await _tcpCommunication.CommandResponseBuffer.OutputAvailableAsync();
 			var readMessage = _tcpCommunication.CommandResponseBuffer.Receive();
-			var messageParts = Encoding.ASCII.GetString(readMessage).Split(':');
+			var messageParts = Encoding.UTF8.GetString(readMessage).Split(':');
 			if (messageParts[0].Equals("ACKNOWLEDGE"))
 			{
 				await _tcpCommunication.CommandResponseBuffer.OutputAvailableAsync();
 				readMessage = _tcpCommunication.CommandResponseBuffer.Receive();
-				messageParts = Encoding.ASCII.GetString(readMessage).Split(':');
+				messageParts = Encoding.UTF8.GetString(readMessage).Split(':');
 				if (messageParts[0].Equals("ACKNOWLEDGE"))
 				{
 					Logger.WriteLine("File " + oldRelativePath + " was renamed to " + newRelativePath + " successfully.");
@@ -181,12 +181,12 @@ namespace ClientApplication.APIs
 		public async Task<bool> Delete(String relativePath)
 		{
 			// Prepare and send the DELETE command
-			var deleteCommandBytes = Encoding.Default.GetBytes("DELETE:" + relativePath + ":");
+			var deleteCommandBytes = Encoding.UTF8.GetBytes("DELETE:" + relativePath + ":");
 			_tcpCommunication.SendCommand(deleteCommandBytes, 0, deleteCommandBytes.Length);
 			
 			await _tcpCommunication.CommandResponseBuffer.OutputAvailableAsync();
 			var readMessage = _tcpCommunication.CommandResponseBuffer.Receive();
-			var messageParts = Encoding.ASCII.GetString(readMessage).Split(':');
+			var messageParts = Encoding.UTF8.GetString(readMessage).Split(':');
 
 			if (messageParts[0].Equals("ACKNOWLEDGE"))
 				return true;
@@ -199,12 +199,12 @@ namespace ClientApplication.APIs
 		public async Task<bool> Mkdir(String folderName)
 		{
 			// Prepare and send the MKDIR command
-			var newFolderCommandBytes = Encoding.Default.GetBytes("MKDIR:" + folderName + ":");
+			var newFolderCommandBytes = Encoding.UTF8.GetBytes("MKDIR:" + folderName + ":");
 			_tcpCommunication.SendCommand(newFolderCommandBytes, 0, newFolderCommandBytes.Length);
 
 			await _tcpCommunication.CommandResponseBuffer.OutputAvailableAsync();
 			var readMessage = _tcpCommunication.CommandResponseBuffer.Receive();
-			var messageParts = Encoding.ASCII.GetString(readMessage).Split(':');
+			var messageParts = Encoding.UTF8.GetString(readMessage).Split(':');
 
 			if (messageParts[0].Equals("ACKNOWLEDGE"))
 				return true;
@@ -216,14 +216,14 @@ namespace ClientApplication.APIs
 
 		public void Kill()
 		{
-			var killCommandBytes = Encoding.Default.GetBytes("KILL:");
+			var killCommandBytes = Encoding.UTF8.GetBytes("KILL:");
 			_tcpCommunication.SendCommand(killCommandBytes, 0, killCommandBytes.Length);
 		}
 
 		public async Task<List<CustomFileHash>> GetAllFileHashes()
 		{
 			// Prepare and send the GETFileHashes command
-			var getFileHashesCommandBytes = Encoding.Default.GetBytes("GETFileHashes:" + Context.CurrentUser + ":");
+			var getFileHashesCommandBytes = Encoding.UTF8.GetBytes("GETFileHashes:" + Context.CurrentUser + ":");
 			_tcpCommunication.SendCommand(getFileHashesCommandBytes, 0, getFileHashesCommandBytes.Length);
 
 			// Reading all FileHashes string
@@ -235,7 +235,7 @@ namespace ClientApplication.APIs
 			}
 
 			var serverFileHashes = new List<CustomFileHash>();
-			var receivedData = Encoding.Default.GetString(memoryStream.GetBuffer());
+			var receivedData = Encoding.UTF8.GetString(memoryStream.GetBuffer());
 
 			// If we didn't got errors we start processing the received FileHashes
 			if (!receivedData.StartsWith("Error:"))
