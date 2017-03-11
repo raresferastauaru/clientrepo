@@ -49,3 +49,5 @@ Temporary Items
 # Custom ignores
 Dev/ClientApplication/bin/*
 Dev/ClientApplication/obj/*
+/Dev/packages/System.Threading.Tasks.Dataflow.4.7.0
+*.suo
