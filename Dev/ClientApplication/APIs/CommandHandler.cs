@@ -6,6 +6,7 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Threading.Tasks.Dataflow;
 using ClientApplication.Models;
+using System.Threading;
 
 namespace ClientApplication.APIs
 {
@@ -22,7 +23,7 @@ namespace ClientApplication.APIs
 			_tcpCommunication = null;
 		}
 
-		public async Task<bool> Get(String relativePath)
+		public async Task<bool> Get(string relativePath)
 		{
 			// Prepare and send the GET command
 			var getCommandBytes = Encoding.UTF8.GetBytes("GET:" + relativePath + ":");
@@ -36,34 +37,40 @@ namespace ClientApplication.APIs
 			if (messageParts[0].Equals("ACKNOWLEDGE"))
 			{
 				Helper.ValidateDirectoryForFile(relativePath);
-				using (var fileStream = File.Create(Helper.GetLocalPath(relativePath)))
+
+                using (var fileStream = File.Create(Helper.GetLocalPath(relativePath)))
 				{
-					var offsetSize = (messageParts[0].Length                // Acknowledge
-									  + messageParts[1].Length              // MessageLength
-									  + messageParts[2].Length              // CreationTime
-									  + messageParts[3].Length              // LastWriteTime
-									  + messageParts[4].Length              // IsReadOnly
-									  + 5);                                 // Plus 1 for each ':' contained in readMessage
+                    if (int.Parse(messageParts[1]) > 0)
+                    {
+                        var offsetSize = (messageParts[0].Length            // Acknowledge
+                                      + messageParts[1].Length              // MessageLength
+                                      + messageParts[2].Length              // CreationTime
+                                      + messageParts[3].Length              // LastWriteTime
+                                      + messageParts[4].Length              // IsReadOnly
+                                      + 5);                                 // Plus 1 for each ':' contained in readMessage
 
-					var fullLength = offsetSize + messageParts[5].Length - 1;
+                        var fullLength = offsetSize + messageParts[5].Length - 1;
 
-					// If we have some DataContent in the Acknowledge message we write that in the file.
-					var remainedMessageSize = fullLength - offsetSize;
-					var expectedSize = int.Parse(messageParts[1]);
-					if (remainedMessageSize > 0)
-					{
-						fileStream.Write(readMessage, offsetSize, remainedMessageSize);
-						expectedSize -= remainedMessageSize;
-					}
+                        // If we have some DataContent in the Acknowledge message we write that in the file.
+                        var remainedMessageSize = fullLength - offsetSize;
+                        var expectedSize = int.Parse(messageParts[1]);
+                        if (remainedMessageSize > 0)
+                        {
+                            fileStream.Write(readMessage, offsetSize, remainedMessageSize);
+                            expectedSize -= remainedMessageSize;
+                        }
 
-					// Writing the DataContent in file until we get the entire expected size.
-					await _tcpCommunication.CommandResponseBuffer.OutputAvailableAsync();
-					while (expectedSize > 0)
-					{
-						var buffer = _tcpCommunication.CommandResponseBuffer.Receive();
-						fileStream.Write(buffer, 0, buffer.Length);
-						expectedSize -= buffer.Length;
-					}
+                        // Writing the DataContent in file until we get the entire expected size.
+                        await _tcpCommunication.CommandResponseBuffer.OutputAvailableAsync();
+                        while (expectedSize > 0)
+                        {
+                            var buffer = _tcpCommunication.CommandResponseBuffer.Receive();
+                            fileStream.Write(buffer, 0, buffer.Length);
+                            expectedSize -= buffer.Length;
+                        }
+                    }
+
+                    fileStream.Close();
 				}
 
 				// Applying the file details.
@@ -93,13 +100,15 @@ namespace ClientApplication.APIs
 				if (fileSize != 0)
 				{
 					var buffer = new byte[Helper.BufferSize];
-					var fileStream = new FileStream(customFileHash.FullLocalPath, FileMode.Open, FileAccess.Read, FileShare.None);
-					int readBytes;
-					while ((readBytes = fileStream.Read(buffer, 0, buffer.Length)) > 0)
-					{
-						_tcpCommunication.SendCommand(buffer, 0, readBytes);
-					}
-					fileStream.Close();
+                    using (var fileStream = new FileStream(customFileHash.FullLocalPath, FileMode.Open, FileAccess.Read, FileShare.None))
+                    {
+                        int readBytes;
+                        while ((readBytes = fileStream.Read(buffer, 0, buffer.Length)) > 0)
+                        {
+                            _tcpCommunication.SendCommand(buffer, 0, readBytes);
+                        }
+                        fileStream.Close();
+                    }
 				}
 
 				// Processing the response for sent data
@@ -142,7 +151,7 @@ namespace ClientApplication.APIs
 			return false;
 		}
 
-		public async Task<bool> Rename(String oldRelativePath, String newRelativePath)
+		public async Task<bool> Rename(string oldRelativePath, string newRelativePath)
 		{
 			// Prepare and send the RENAME command
 			var renameCommandBytes = Encoding.UTF8.GetBytes("RENAME:" + oldRelativePath + ":" + newRelativePath + ":");
@@ -178,12 +187,14 @@ namespace ClientApplication.APIs
 			return false;
 		}
 
-		public async Task<bool> Delete(String relativePath)
+		public async Task<bool> Delete(string relativePath)
 		{
 			// Prepare and send the DELETE command
 			var deleteCommandBytes = Encoding.UTF8.GetBytes("DELETE:" + relativePath + ":");
 			_tcpCommunication.SendCommand(deleteCommandBytes, 0, deleteCommandBytes.Length);
-			
+
+            Thread.Sleep(250);                                                                      //  ?!!??!?!?!
+
 			await _tcpCommunication.CommandResponseBuffer.OutputAvailableAsync();
 			var readMessage = _tcpCommunication.CommandResponseBuffer.Receive();
 			var messageParts = Encoding.UTF8.GetString(readMessage).Split(':');
@@ -196,7 +207,7 @@ namespace ClientApplication.APIs
 			return false;
 		}
 
-		public async Task<bool> Mkdir(String folderName)
+		public async Task<bool> Mkdir(string folderName)
 		{
 			// Prepare and send the MKDIR command
 			var newFolderCommandBytes = Encoding.UTF8.GetBytes("MKDIR:" + folderName + ":");

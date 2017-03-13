@@ -9,12 +9,11 @@ namespace ClientApplication.APIs
 {
     public class MyFsWatcher : IDisposable
 	{
-		private int _enqueuedFilesCounter = 1;
 		private SyncProcessor _syncProcessor;
         private FileSystemWatcher _fileWatcher;
 
         [PermissionSet(SecurityAction.Demand, Name = "FullTrust")]
-        public MyFsWatcher(String watcherPath, SyncProcessor syncProcessor)
+        public MyFsWatcher(string watcherPath, SyncProcessor syncProcessor)
         {
 			_syncProcessor = syncProcessor;
             _fileWatcher = new FileSystemWatcher
@@ -65,18 +64,19 @@ namespace ClientApplication.APIs
             }
         }
 
-        private void EnqueuingManager(FileChangeTypes fileChangeType, String fullPath, String oldFullPath = "")
+        private void EnqueuingManager(FileChangeTypes fileChangeType, string fullPath, string oldFullPath = "")
 		{
 			var relativePath = Helper.GetRelativePath(fullPath);
 			if (_syncProcessor.InProcessingList(relativePath))
 			{
+                //Logger.WriteLine(" ! FileHash: " + relativePath + " is already in the processing queue.");
 				return;
 			}
 
 			var fileHash = new CustomFileHash(fileChangeType, fullPath, oldFullPath);
 			_syncProcessor.AddChangedFile(fileHash);
 
-			Logger.WriteFileHash(_enqueuedFilesCounter++, fileHash);
+			Logger.WriteFileHash(fileHash);
         }
     }
 }

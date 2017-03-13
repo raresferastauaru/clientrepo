@@ -96,6 +96,7 @@ namespace ClientApplication
             {
 				_commandHandler.Kill();
                 SwitchManualUiState(false);
+                Logger.WriteDisconnectLine();
             }
             catch (Exception ex)
             {
@@ -416,6 +417,7 @@ namespace ClientApplication
 				_myFsWatcher = null;
 
 				SwitchAutoUiState(false);
+                Logger.WriteDisconnectLine();
             }
             catch (Exception ex)
 			{

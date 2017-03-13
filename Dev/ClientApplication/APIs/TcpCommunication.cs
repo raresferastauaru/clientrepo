@@ -4,18 +4,19 @@ using System.IO;
 using System.Linq;
 using System.Net.Sockets;
 using System.Text;
-using System.Threading;
 using System.Threading.Tasks;
 using System.Threading.Tasks.Dataflow;
 using System.Windows.Forms;
 using ClientApplication.Models;
+using System.Threading;
 
 namespace ClientApplication.APIs
 {
     public class TcpCommunication : IDisposable
 	{
 		private TcpClient _tcpClient;
-		private readonly NetworkStream _networkStream;
+		private NetworkStream _networkStream;
+
 		public BufferBlock<byte[]> CommandResponseBuffer;
 	    public ThreadSafeList<CustomFileHash> ChangedFilesList;
 
@@ -56,7 +57,8 @@ namespace ClientApplication.APIs
                 throw new Exception("SocketException: " + e);
             }
 	    }
-		public void Dispose()
+
+        public void Dispose()
 		{
 			_networkStream.Dispose();
 			_tcpClient.Close();
@@ -69,7 +71,6 @@ namespace ClientApplication.APIs
 
 	    private Action AsyncReading()
 	    {
-			// ReSharper disable once FunctionNeverReturns
 			return () =>
 		    {
 			    while (true)
@@ -94,20 +95,16 @@ namespace ClientApplication.APIs
 					    {
 						    ManageEocrMessage(splitedData, buffer);
 					    }
-					    else if (buffer.Length > 0)
+                        else if (buffer.Length > 0)
 					    {
 						    CommandResponseBuffer.Post(buffer);
 					    }
-					    else
-						{
-							CommandResponseBuffer.Complete();
-							CommandResponseBuffer = new BufferBlock<byte[]>();
-							if (_customFileHash != null)
-							{
-								ChangedFilesList.Add(_customFileHash);
-								_customFileHash = null;
-							}
-					    }
+
+                        if(_customFileHash != null)
+                        {
+                            ChangedFilesList.Add(_customFileHash);
+                            _customFileHash = null;
+                        }
 				    }
 				    catch (ObjectDisposedException)
 					{
@@ -162,18 +159,18 @@ namespace ClientApplication.APIs
 				switch (command)
 				{
 					case "CHANGED":
-						message = String.Format("PushNotification: ChangedOnServer - {0}", notifData[1]);
+						message = string.Format("PushNotification: ChangedOnServer - {0}", notifData[1]);
 						fullLocalPath = Helper.GetLocalPath(notifData[1]);
 						_customFileHash = new CustomFileHash(FileChangeTypes.ChangedOnServer, fullLocalPath);
 						break;
 					case "RENAMED":
-						message = String.Format("PushNotification: RenamedOnServer - {0} to {1}", notifData[2], notifData[1]);
+						message = string.Format("PushNotification: RenamedOnServer - {0} to {1}", notifData[2], notifData[1]);
 						fullLocalPath = Helper.GetLocalPath(notifData[2]);
 						var oldFullLocalPath = Helper.GetLocalPath(notifData[1]);
 						_customFileHash = new CustomFileHash(FileChangeTypes.RenamedOnServer, fullLocalPath, oldFullLocalPath);
 						break;
 					case "DELETED":
-						message = String.Format("PushNotification: DeletedOnServer - {0}", notifData[1]);
+						message = string.Format("PushNotification: DeletedOnServer - {0}", notifData[1]);
 						fullLocalPath = Helper.GetLocalPath(notifData[1]);
 						_customFileHash = new CustomFileHash(FileChangeTypes.DeletedOnServer, fullLocalPath);
 						break;
@@ -206,56 +203,46 @@ namespace ClientApplication.APIs
 			}
 	    }
 
-	    private void ManageEocrMessage(IReadOnlyList<string> splitedData, ICollection<byte> buffer)
+	    private void ManageEocrMessage(IReadOnlyList<string> splitedData, byte[] buffer)
 	    {
 		    var bytesBeforeEocr = 0;
-		    var bytesWithEocr = 0;
 		    for (var i = 0; i < splitedData.Count(); i++)
 		    {
 			    var data = splitedData[i];
 
 			    if (!data.Equals("EOCR"))
 				    bytesBeforeEocr += data.Length + 1;
-			    else
-			    {
-				    break;
-			    }
+			    else break;
 		    }
 
-			if (bytesBeforeEocr > 0 && splitedData[0] != "")
-		    {
-			    var dataBeforeEocr = buffer.Take(bytesBeforeEocr).ToArray();
+            if (bytesBeforeEocr == 1 && splitedData[0].Equals("") && buffer.Count() == 6)
+            {
+                CommandResponseBuffer.Complete();
+                CommandResponseBuffer = new BufferBlock<byte[]>();
+            }
+            else
+            {
+                var dataBeforeEocr = buffer.Take(bytesBeforeEocr).ToArray();
 
-			    if (dataBeforeEocr[dataBeforeEocr.Length - 1] == Encoding.UTF8.GetBytes(":")[0])
-				    dataBeforeEocr = dataBeforeEocr.Take(dataBeforeEocr.Length - 1).ToArray();
+                if (dataBeforeEocr.Length > 0 && dataBeforeEocr[dataBeforeEocr.Length - 1] == Encoding.UTF8.GetBytes(":")[0])
+                {
+                    //dataBeforeEocr = dataBeforeEocr.Take(dataBeforeEocr.Length - 1).ToArray();
+                    CommandResponseBuffer.Post(dataBeforeEocr);
+                }
 
-			    CommandResponseBuffer.Post(dataBeforeEocr);
-
-			    while (CommandResponseBuffer.Count > 0)
+                while (CommandResponseBuffer.Count > 0) ;
 				    Thread.Sleep(10);
 			    CommandResponseBuffer.Complete();
 			    CommandResponseBuffer = new BufferBlock<byte[]>();
 
-			    bytesWithEocr += bytesBeforeEocr + 5;
-			    if (bytesWithEocr < buffer.Count)
+			    var bytesToEocr = bytesBeforeEocr + 5;
+			    if (bytesToEocr < buffer.Count())
 			    {
-				    var dataAfterEocr = buffer.Skip(bytesWithEocr).ToArray();
+				    var dataAfterEocr = buffer.Skip(bytesToEocr).ToArray();
 				    CommandResponseBuffer.Post(dataAfterEocr);
 			    }
-		    }
-		    else
-		    {
-			    CommandResponseBuffer.Complete();
-			    CommandResponseBuffer = new BufferBlock<byte[]>();
-		    }
-
-			//// In case there is a transmission on going ?!!?!??!!?!?!
-		    //if (_customFileHash != null)
-		    //{
-			//    ChangedFilesList.Add(_customFileHash);
-			//    _customFileHash = null;
-		    //}
-	    }
+            }
+        }
 
 	    public void SendCommand(byte[] buffer, int offset, int count)
 	    {
