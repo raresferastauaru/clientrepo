@@ -54,10 +54,10 @@ namespace ClientApplication.Models
             RelativePath = Helper.GetRelativePath(fullLocalPath);
             FileInfo = new FileInfo(FullLocalPath);
 
-			if (changeType == FileChangeTypes.RenamedOnClient)
-				OldRelativePath = Helper.GetRelativePath(oldFullLocalPath);
-			if (changeType == FileChangeTypes.RenamedOnServer)
-				OldFullLocalPath = oldFullLocalPath;
+            if (changeType == FileChangeTypes.RenamedOnClient)
+                OldRelativePath = Helper.GetRelativePath(oldFullLocalPath);
+            if (changeType == FileChangeTypes.RenamedOnServer)
+                OldFullLocalPath = oldFullLocalPath;
 
             if (!File.Exists(FullLocalPath)) return;
 
@@ -115,7 +115,7 @@ namespace ClientApplication.Models
                 using (var stream = File.OpenRead(FullLocalPath))
                 {
                     var info = new FileInfo(FullLocalPath);
-                    
+
                     var infoStr = info.CreationTimeUtc.ToString(CultureInfo.InvariantCulture)
                                     + info.LastWriteTimeUtc.ToString(CultureInfo.InvariantCulture)
                                     + info.IsReadOnly;
@@ -135,12 +135,12 @@ namespace ClientApplication.Models
             var str = "FileHashDetails:"
                       + HashCode + ":"
                       + FileInfo.CreationTimeUtc.Ticks + ":"
-					  + FileInfo.LastWriteTimeUtc.Ticks + ":"
+                      + FileInfo.LastWriteTimeUtc.Ticks + ":"
                       + FileInfo.IsReadOnly + ":";
             return str;
         }
 
-		public string Stuff()
+		public string GetFileHashBasicDetails()
 		{
 			var str = HashCode + ":";
 			if (FileInfo != null)

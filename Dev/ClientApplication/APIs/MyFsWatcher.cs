@@ -65,18 +65,17 @@ namespace ClientApplication.APIs
         }
 
         private void EnqueuingManager(FileChangeTypes fileChangeType, string fullPath, string oldFullPath = "")
-		{
-			var relativePath = Helper.GetRelativePath(fullPath);
-			if (_syncProcessor.InProcessingList(relativePath))
-			{
-                //Logger.WriteLine(" ! FileHash: " + relativePath + " is already in the processing queue.");
-				return;
-			}
+        {
+            var relativePath = Helper.GetRelativePath(fullPath);
+            if (_syncProcessor.InProcessingList(relativePath) || Path.GetExtension(fullPath).ToLower().Equals(".tmp"))
+            {
+                return;
+            }
 
-			var fileHash = new CustomFileHash(fileChangeType, fullPath, oldFullPath);
-			_syncProcessor.AddChangedFile(fileHash);
+            var fileHash = new CustomFileHash(fileChangeType, fullPath, oldFullPath);
+            _syncProcessor.AddChangedFile(fileHash);
 
-			Logger.WriteFileHash(fileHash);
+            Logger.WriteFileHash(fileHash);
         }
     }
 }

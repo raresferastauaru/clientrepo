@@ -104,7 +104,7 @@ namespace ClientApplication
 		public static bool ChangeFileAttributes(string fileName, string creationTimeTicks, string lastWriteTimeTicks, string isReadOnlyString)
 		{
 			//try
-			var fullPath = Helper.GetLocalPath(fileName);
+			var fullPath = GetLocalPath(fileName);
 			var creationTime = new DateTime(long.Parse(creationTimeTicks));
 			var lastWriteTime = new DateTime(long.Parse(lastWriteTimeTicks));
 			var isReadOnly = bool.Parse(isReadOnlyString);

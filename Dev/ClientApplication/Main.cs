@@ -19,12 +19,11 @@ namespace ClientApplication
     public partial class Main : Form
     {
         #region PrivateMembers 
-
 		private const string MyIp = "193.226.9.250";			//10.6.99.254
 		private const string MyPort = "4445";					//4444
 
-        private const Boolean UiConnectedState = true;
-		private const Boolean UiDisconnectedState = false;
+        private const bool UiConnectedState = true;
+		private const bool UiDisconnectedState = false;
 
 		private TcpCommunication _tcpCommunication;
 		private CommandHandler _commandHandler;
@@ -107,14 +106,14 @@ namespace ClientApplication
         private async void btnGetConfirm_Click(object sender, EventArgs e)
         {
             if (String.IsNullOrEmpty(txtGetFileName.Text)) return;
-            
+
             try
             {
                 var fullPath = Helper.SyncLocation + txtGetFileName.Text.Replace('/', '\\');
-	            var relPath = Helper.GetRelativePath(fullPath);
+                var relPath = Helper.GetRelativePath(fullPath);
 
-				var response = await _commandHandler.Get(txtGetFileName.Text);
-                    
+                var response = await _commandHandler.Get(txtGetFileName.Text);
+
                 if (response)
                 {
                     switch (Path.GetExtension(fullPath))
@@ -307,18 +306,22 @@ namespace ClientApplication
 		            _tcpCommunication.Dispose();
 	            }
 	            else
-				{
-					_commandHandler = new CommandHandler(_tcpCommunication);
+                {
+                    SwitchAutoUiState(UiConnectedState);
+
+                    _commandHandler = new CommandHandler(_tcpCommunication);
 
 					Logger.WriteInitialSyncBreakLine();
 					var filesForInitialSync = await DetermineFilesForInitialSync();
 					_syncProcessor = new SyncProcessor(_commandHandler, changedFilesList);
 					filesForInitialSync.ForEach(_syncProcessor.AddChangedFile);
-					_syncProcessor.ChangedFileManager();
 
-					Logger.WriteSyncBreakLine();
-					SwitchAutoUiState(UiConnectedState);
+                    //_syncProcessor.ChangedFileManager();
+                    var task = new Task(_syncProcessor.ChangedFileManager);
+                    task.Start();
+                    task.Wait();
 
+                    Logger.WriteSyncBreakLine();
 					changedFilesList.OnAdd += changedFilesList_OnAdd;
 					_myFsWatcher = new MyFsWatcher(txtDefaultFolderAuto.Text, _syncProcessor);
 	            }

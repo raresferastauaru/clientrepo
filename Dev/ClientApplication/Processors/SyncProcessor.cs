@@ -59,36 +59,40 @@ namespace ClientApplication.Processors
                             {
                                 // Changes on CLIENT
                                 case FileChangeTypes.CreatedOnClient:
-		                            if (Helper.IsDirectory(fileHash.FullLocalPath))
-			                            await _commandHandler.Mkdir(fileHash.RelativePath);
-		                            else
-			                            await _commandHandler.Put(fileHash);
+                                    if (Helper.IsDirectory(fileHash.FullLocalPath))
+                                        await _commandHandler.Mkdir(fileHash.RelativePath);
+                                    else
+                                        await _commandHandler.Put(fileHash);
                                     Logger.WriteLine(string.Format("{0}. Succes on dequeue: {1} ==> {2}",
                                         _dequeuedFilesCounter++, fileHash.RelativePath, fileHash.ChangeType));
                                     break;
 
                                 case FileChangeTypes.ChangedOnClient:
-									await _commandHandler.Put(fileHash);
+                                    await _commandHandler.Put(fileHash);
                                     Logger.WriteLine(string.Format("{0}. Succes on dequeue: {1} ==> {2}",
                                         _dequeuedFilesCounter++, fileHash.RelativePath, fileHash.ChangeType));
                                     break;
 
                                 case FileChangeTypes.DeletedOnClient:
-									await _commandHandler.Delete(fileHash.RelativePath);
+                                    await _commandHandler.Delete(fileHash.RelativePath);
                                     Logger.WriteLine(string.Format("{0}. Succes on dequeue: {1} ==> {2}",
                                         _dequeuedFilesCounter++, fileHash.RelativePath, fileHash.ChangeType));
                                     break;
 
                                 case FileChangeTypes.RenamedOnClient:
-									await _commandHandler.Rename(fileHash.OldRelativePath, fileHash.RelativePath);
+                                    await _commandHandler.Rename(fileHash.OldRelativePath, fileHash.RelativePath);
                                     Logger.WriteLine(string.Format("{0}. Succes on dequeue: {1} renamed to {2}",
                                         _dequeuedFilesCounter++, fileHash.OldRelativePath, fileHash.RelativePath));
                                     break;
 
 
                                 // Changes on SERVER
+                                case FileChangeTypes.CreatedOnServer:
+                                    Directory.CreateDirectory(fileHash.FullLocalPath);
+                                    break;
+
                                 case FileChangeTypes.ChangedOnServer:
-									var fileCreated = _commandHandler.Get(fileHash.RelativePath);
+                                    var fileCreated = _commandHandler.Get(fileHash.RelativePath);
                                     if (await fileCreated)
                                         Logger.WriteLine(string.Format("{0}. Succes on dequeue: {1} ==> {2}",
                                             _dequeuedFilesCounter++, fileHash.RelativePath, fileHash.ChangeType));
@@ -98,24 +102,45 @@ namespace ClientApplication.Processors
                                     break;
 
                                 case FileChangeTypes.DeletedOnServer:
-		                            if (File.Exists(fileHash.FullLocalPath))
-		                            {
-			                            File.Delete(fileHash.FullLocalPath);
-			                            Logger.WriteLine(string.Format("{0}. Succes on dequeue: {1} ==> {2}",
-				                            _dequeuedFilesCounter++, fileHash.RelativePath, fileHash.ChangeType));
-		                            }
-		                            else
-		                            {
-										Logger.WriteLine(string.Format("{0}. Fail on dequeue: {1} ==> {2}\n(File " + fileHash.FullLocalPath + "doesn't exist)",
-											_dequeuedFilesCounter++, fileHash.RelativePath, fileHash.ChangeType));
-		                            }
+                                    if (Helper.IsDirectory(fileHash.FullLocalPath))
+                                    {
+                                        if (Directory.Exists(fileHash.FullLocalPath))
+                                        {
+                                            Directory.Delete(fileHash.FullLocalPath, true);
+                                            Logger.WriteLine(string.Format("{0}. Succes on dequeue: {1} ==> {2}",
+                                                _dequeuedFilesCounter++, fileHash.RelativePath, fileHash.ChangeType));
+                                        }
+                                        else
+                                        {
+                                            Logger.WriteLine(string.Format("{0}. Fail on dequeue: {1} ==> {2}\n(Directory " + fileHash.FullLocalPath + "doesn't exist)",
+                                                _dequeuedFilesCounter++, fileHash.RelativePath, fileHash.ChangeType));
+                                        }
+                                    }
+                                    else if (File.Exists(fileHash.FullLocalPath))
+                                    {
+                                        File.Delete(fileHash.FullLocalPath);
+                                        Logger.WriteLine(string.Format("{0}. Succes on dequeue: {1} ==> {2}",
+                                            _dequeuedFilesCounter++, fileHash.RelativePath, fileHash.ChangeType));
+                                    }
+                                    else
+                                    {
+                                        Logger.WriteLine(string.Format("{0}. Fail on dequeue: {1} ==> {2}\n(File " + fileHash.FullLocalPath + "doesn't exist)",
+                                            _dequeuedFilesCounter++, fileHash.RelativePath, fileHash.ChangeType));
+                                    }
                                     break;
 
                                 case FileChangeTypes.RenamedOnServer:
-		                            File.Move(fileHash.OldFullLocalPath, fileHash.FullLocalPath);
-									Logger.WriteLine(string.Format("{0}. Succes on dequeue: {1} ==> {2}",
-										_dequeuedFilesCounter++, fileHash.RelativePath, fileHash.ChangeType));
-		                            break;
+                                    if (Helper.IsDirectory(fileHash.OldFullLocalPath))
+                                    {
+                                        Directory.Move(fileHash.OldFullLocalPath, fileHash.FullLocalPath);
+                                    }
+                                    else
+                                    {
+                                        File.Move(fileHash.OldFullLocalPath, fileHash.FullLocalPath);
+                                    }
+                                    Logger.WriteLine(string.Format("{0}. Succes on dequeue: {1} ==> {2}",
+                                        _dequeuedFilesCounter++, fileHash.RelativePath, fileHash.ChangeType));
+                                    break;
                             }
 
                             processed = true;

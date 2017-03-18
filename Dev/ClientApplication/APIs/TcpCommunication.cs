@@ -163,8 +163,13 @@ namespace ClientApplication.APIs
 						fullLocalPath = Helper.GetLocalPath(notifData[1]);
 						_customFileHash = new CustomFileHash(FileChangeTypes.ChangedOnServer, fullLocalPath);
 						break;
+                    case "MKDIR":
+                        message = string.Format("PushNotification: MakedNewDirectory - {0}", notifData[1]);
+                        fullLocalPath = Helper.GetLocalPath(notifData[1]);
+                        _customFileHash = new CustomFileHash(FileChangeTypes.CreatedOnServer, fullLocalPath);
+                        break;
 					case "RENAMED":
-						message = string.Format("PushNotification: RenamedOnServer - {0} to {1}", notifData[2], notifData[1]);
+						message = string.Format("PushNotification: RenamedOnServer - {0} to {1}", notifData[1], notifData[2]); // oldName to newName
 						fullLocalPath = Helper.GetLocalPath(notifData[2]);
 						var oldFullLocalPath = Helper.GetLocalPath(notifData[1]);
 						_customFileHash = new CustomFileHash(FileChangeTypes.RenamedOnServer, fullLocalPath, oldFullLocalPath);
@@ -226,7 +231,7 @@ namespace ClientApplication.APIs
 
                 if (dataBeforeEocr.Length > 0 && dataBeforeEocr[dataBeforeEocr.Length - 1] == Encoding.UTF8.GetBytes(":")[0])
                 {
-                    //dataBeforeEocr = dataBeforeEocr.Take(dataBeforeEocr.Length - 1).ToArray();
+                    dataBeforeEocr = dataBeforeEocr.Take(dataBeforeEocr.Length - 1).ToArray();
                     CommandResponseBuffer.Post(dataBeforeEocr);
                 }
 

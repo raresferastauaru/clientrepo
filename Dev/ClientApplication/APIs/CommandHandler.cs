@@ -23,8 +23,8 @@ namespace ClientApplication.APIs
 			_tcpCommunication = null;
 		}
 
-		public async Task<bool> Get(string relativePath)
-		{
+        public async Task<bool> Get(string relativePath)
+        {
 			// Prepare and send the GET command
 			var getCommandBytes = Encoding.UTF8.GetBytes("GET:" + relativePath + ":");
 			_tcpCommunication.SendCommand(getCommandBytes, 0, getCommandBytes.Count());
@@ -43,11 +43,11 @@ namespace ClientApplication.APIs
                     if (int.Parse(messageParts[1]) > 0)
                     {
                         var offsetSize = (messageParts[0].Length            // Acknowledge
-                                      + messageParts[1].Length              // MessageLength
-                                      + messageParts[2].Length              // CreationTime
-                                      + messageParts[3].Length              // LastWriteTime
-                                      + messageParts[4].Length              // IsReadOnly
-                                      + 5);                                 // Plus 1 for each ':' contained in readMessage
+                                        + messageParts[1].Length              // MessageLength
+                                        + messageParts[2].Length              // CreationTime
+                                        + messageParts[3].Length              // LastWriteTime
+                                        + messageParts[4].Length              // IsReadOnly
+                                        + 5);                                 // Plus 1 for each ':' contained in readMessage
 
                         var fullLength = offsetSize + messageParts[5].Length - 1;
 
@@ -109,7 +109,7 @@ namespace ClientApplication.APIs
                         }
                         fileStream.Close();
                     }
-				}
+                }
 
 				// Processing the response for sent data
 				await _tcpCommunication.CommandResponseBuffer.OutputAvailableAsync();
@@ -248,22 +248,26 @@ namespace ClientApplication.APIs
 			var serverFileHashes = new List<CustomFileHash>();
 			var receivedData = Encoding.UTF8.GetString(memoryStream.GetBuffer());
 
-			// If we didn't got errors we start processing the received FileHashes
-			if (!receivedData.StartsWith("Error:"))
-			{
-				var processedData = receivedData.Split('|');
-				processedData = processedData.Take(processedData.Count() - 1).Distinct().ToArray();
+            // If we didn't got errors we start processing the received FileHashes
+            if (!receivedData.StartsWith("Error:"))
+            {
+                var processedData = receivedData.Split('|');
+                processedData = processedData.Take(processedData.Count() - 1).Distinct().ToArray();
 
-				foreach (var data in processedData)
-				{
-					var splits = data.Split(':');
-					serverFileHashes.Add(new CustomFileHash(FileChangeTypes.None, splits[0], splits[1], int.Parse(splits[2]), int.Parse(splits[3]), splits[4].Equals("1")));
-				}
-			}
+                foreach (var data in processedData)
+                {
+                    var splits = data.Split(':');
+                    serverFileHashes.Add(new CustomFileHash(FileChangeTypes.None, splits[0], splits[1], int.Parse(splits[2]), int.Parse(splits[3]), splits[4].Equals("1")));
+                }
+            }
+            else
+            {
+                if (!Context.InAutoMode)
+                    throw new Exception(receivedData.Split(':')[1]);
+                Logger.WriteLine("Error message in GetAllFileHashes Command: " + receivedData.Split(':')[1]);
+            }
 
-			if (!Context.InAutoMode) throw new Exception(receivedData.Split(':')[1]);
-			Logger.WriteLine("Error message in GetAllFileHashes Command: " + receivedData.Split(':')[1]);
-			return serverFileHashes;
-		}
+            return serverFileHashes;
+        }
 	}
 }
