@@ -1,5 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 
@@ -17,15 +16,15 @@ namespace ClientApplication.Processors
             var blackList = new List<CustomFileHash>();
 	        foreach (var serverFileHash in serverFileHashes)
 	        {
-                //var localFileHash = clientFileHashes.FirstOrDefault(lfh => lfh.HashCode.Equals(serverFileHash.HashCode)) 
-                //  ??
-                //	clientFileHashes.FirstOrDefault(lfh => lfh.HashCode.Equals(serverFileHash.OldHashCode));
+                var localFileHash = clientFileHashes.FirstOrDefault(lfh => lfh.HashCode.Equals(serverFileHash.HashCode))
+                                    ??
+                                    clientFileHashes.FirstOrDefault(lfh => lfh.HashCode.Equals(serverFileHash.OldHashCode));
 
-				var localFileHash = clientFileHashes.FirstOrDefault(lfh => lfh.RelativePath.Equals(serverFileHash.RelativePath))
-									??
-									clientFileHashes.FirstOrDefault(lfh => lfh.RelativePath.Equals(serverFileHash.OldRelativePath));
+                //var localFileHash = clientFileHashes.FirstOrDefault(lfh => lfh.RelativePath.Equals(serverFileHash.RelativePath))
+                //					??
+                //					clientFileHashes.FirstOrDefault(lfh => lfh.RelativePath.Equals(serverFileHash.OldRelativePath));
 
-		        string message;
+                string message;
 		        if (localFileHash != null)
 		        {
 			        if (serverFileHash.RelativePath == localFileHash.RelativePath &&
@@ -71,7 +70,7 @@ namespace ClientApplication.Processors
 			        else if (serverFileHash.RelativePath != localFileHash.RelativePath &&
 			                 serverFileHash.HashCode == localFileHash.HashCode)
 			        {
-				        if (localFileHash.RelativePath == serverFileHash.RelativePath)
+				        if (localFileHash.RelativePath == serverFileHash.OldRelativePath)
 				        {
 					        message = string.Format("{0}. RENAME: {1} to {2} (New name on SERVER)", contor++,
 						        serverFileHash.OldRelativePath, serverFileHash.RelativePath);
@@ -79,16 +78,21 @@ namespace ClientApplication.Processors
 					        initialSyncFiles.Add(new CustomFileHash(FileChangeTypes.RenamedOnServer,
 						        serverFileHash.RelativePath, serverFileHash.OldRelativePath,
 						        serverFileHash.HashCode, serverFileHash.OldHashCode));
-				        }
+                            blackList.Add(localFileHash);
+                        }
 				        else
                         { 
 					        message = string.Format("{0}. RENAME: {1} to {2} (New name on CLIENT)", contor++,
-						        serverFileHash.OldRelativePath, serverFileHash.RelativePath);
+						        serverFileHash.RelativePath, localFileHash.RelativePath);
 
 					        initialSyncFiles.Add(new CustomFileHash(FileChangeTypes.RenamedOnClient,
-						        localFileHash.RelativePath, localFileHash.OldRelativePath,
-						        localFileHash.HashCode, localFileHash.OldHashCode));
-				        }
+						        localFileHash.RelativePath, serverFileHash.RelativePath,
+                                serverFileHash.HashCode, serverFileHash.OldHashCode));
+                            blackList.Add(localFileHash);
+
+                            /// WHAT HASHCODES SHOULD WE SEND ?!?!serverFileHash
+                            /// how is the Changed & Renamed file handled ?!?!?!
+                        }
 			        }
 			        else
 			        {

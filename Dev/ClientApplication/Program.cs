@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Threading;
 using System.Windows.Forms;
 
 namespace ClientApplication
@@ -11,9 +12,19 @@ namespace ClientApplication
         [STAThread]
         static void Main()
         {
-            Application.EnableVisualStyles();
-            Application.SetCompatibleTextRenderingDefault(false);
-            Application.Run(new Main());
+            var appGuid = "31c7f058-e4d5-4369-8043-af1125588b46";
+            using (Mutex mutex = new Mutex(false, "Global\\" + appGuid))
+            {
+                if (!mutex.WaitOne(0, false))
+                {
+                    MessageBox.Show("Instance already running");
+                    return;
+                }
+
+                Application.EnableVisualStyles();
+                Application.SetCompatibleTextRenderingDefault(false);
+                Application.Run(new Main());
+            }
         }
     }
 }

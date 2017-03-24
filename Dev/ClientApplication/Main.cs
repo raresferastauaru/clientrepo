@@ -19,8 +19,10 @@ namespace ClientApplication
     public partial class Main : Form
     {
         #region PrivateMembers 
-		private const string MyIp = "193.226.9.250";			//10.6.99.254
-		private const string MyPort = "4445";					//4444
+        private const string MyIp = "193.226.9.250";
+        private const string MyPort = "4445";
+        //private const string MyIp = "10.6.99.254";
+        //private const string MyPort = "4444";
 
         private const bool UiConnectedState = true;
 		private const bool UiDisconnectedState = false;
@@ -43,7 +45,7 @@ namespace ClientApplication
         {
             var tabs = tabApplicationMode.TabPages;
             tabApplicationMode.SelectedTab = tabs[1];
-//            tabApplicationMode.SelectedTab = tabs[0];
+            //tabApplicationMode.SelectedTab = tabs[0];
 
 	        btnConnectAuto_Click(null, null);
         }
@@ -103,40 +105,40 @@ namespace ClientApplication
             }
         }
 
-        private async void btnGetConfirm_Click(object sender, EventArgs e)
+        private void btnGetConfirm_Click(object sender, EventArgs e)
         {
-            if (String.IsNullOrEmpty(txtGetFileName.Text)) return;
+            //if (String.IsNullOrEmpty(txtGetFileName.Text)) return;
 
-            try
-            {
-                var fullPath = Helper.SyncLocation + txtGetFileName.Text.Replace('/', '\\');
-                var relPath = Helper.GetRelativePath(fullPath);
+            //try
+            //{
+            //    var fullPath = Helper.SyncLocation + txtGetFileName.Text.Replace('/', '\\');
+            //    var relPath = Helper.GetRelativePath(fullPath);
 
-                var response = await _commandHandler.Get(txtGetFileName.Text);
+            //    var response = await _commandHandler.Get(txtGetFileName.Text);
 
-                if (response)
-                {
-                    switch (Path.GetExtension(fullPath))
-                    {
-                        case ".exe":
-                            break;
-                        case ".txt":
-                            Process.Start("notepad++.exe", fullPath);
-                            break;
-                        case ".mp3":
-                            Process.Start("wmplayer.exe", fullPath);
-                            break;
-                        default:
-                            MessageBox.Show(Path.GetExtension(fullPath) + @" extension is not treated");
-                            break;
-                    }
-                }
-                else MessageBox.Show("The file was empty !");
-            }
-            catch (Exception ex)
-            {
-                MessageBox.Show(ex.Message, "Error", MessageBoxButtons.OK);
-            }
+            //    if (response)
+            //    {
+            //        switch (Path.GetExtension(fullPath))
+            //        {
+            //            case ".exe":
+            //                break;
+            //            case ".txt":
+            //                Process.Start("notepad++.exe", fullPath);
+            //                break;
+            //            case ".mp3":
+            //                Process.Start("wmplayer.exe", fullPath);
+            //                break;
+            //            default:
+            //                MessageBox.Show(Path.GetExtension(fullPath) + @" extension is not treated");
+            //                break;
+            //        }
+            //    }
+            //    else MessageBox.Show("The file was empty !");
+            //}
+            //catch (Exception ex)
+            //{
+            //    MessageBox.Show(ex.Message, "Error", MessageBoxButtons.OK);
+            //}
         }
 
         private void btnPutBrowse_Click(object sender, EventArgs e)
@@ -152,10 +154,10 @@ namespace ClientApplication
             }
         }
 
-        private async void btnPutConfirm_Click(object sender, EventArgs e)
+        private void btnPutConfirm_Click(object sender, EventArgs e)
         {
-            var chf = new CustomFileHash(txtPutPath.Text);
-			await _commandHandler.Put(chf);
+            //var chf = new CustomFileHash(txtPutPath.Text);
+			//await _commandHandler.Put(chf);
         }
 
         private void btnRenameFromBrowse_Click(object sender, EventArgs e)
@@ -170,53 +172,53 @@ namespace ClientApplication
                 txtRenameFrom.Text = dlg.FileName;
             }
         }
-        private async void btnRenameConfirm_Click(object sender, EventArgs e)
+        private void btnRenameConfirm_Click(object sender, EventArgs e)
         {
-            try
-            {
-                var oldFileName = txtRenameFrom.Text;
-                var newFileName = txtRenameTo.Text;
+            //try
+            //{
+            //    var oldFileName = txtRenameFrom.Text;
+            //    var newFileName = txtRenameTo.Text;
 
-                var success = await _commandHandler.Rename(oldFileName, newFileName);
+            //    var success = await _commandHandler.Rename(oldFileName, newFileName);
                 
-                if (success)
-                    MessageBox.Show("File " + oldFileName + " was renamed to " + newFileName + " succesfully!", @"Success!", MessageBoxButtons.OK);
-            }
-            catch (Exception ex)
-            {
-                MessageBox.Show(ex.Message, "Error!", MessageBoxButtons.OK);
-            }
+            //    if (success)
+            //        MessageBox.Show("File " + oldFileName + " was renamed to " + newFileName + " succesfully!", @"Success!", MessageBoxButtons.OK);
+            //}
+            //catch (Exception ex)
+            //{
+            //    MessageBox.Show(ex.Message, "Error!", MessageBoxButtons.OK);
+            //}
         }
 
-        private async void btnDeleteConfirm_Click(object sender, EventArgs e)
+        private void btnDeleteConfirm_Click(object sender, EventArgs e)
         {
-            try
-            {
-				var success = await _commandHandler.Delete(txtDeleteFileName.Text);
+            //try
+            //{
+	           // var success = await _commandHandler.Delete(txtDeleteFileName.Text);
 
-                if (success)
-                    MessageBox.Show(@"File/directory " + txtDeleteFileName.Text + @" was deleted succesfully!", @"Success!", MessageBoxButtons.OK);
-            }
-            catch (Exception ex)
-            {
-                MessageBox.Show(ex.Message);
-            }
+            //    if (success)
+            //        MessageBox.Show(@"File/directory " + txtDeleteFileName.Text + @" was deleted succesfully!", @"Success!", MessageBoxButtons.OK);
+            //}
+            //catch (Exception ex)
+            //{
+            //    MessageBox.Show(ex.Message);
+            //}
         }
 
-        private async void btnNewFolderConfirm_Click(object sender, EventArgs e)
+        private void btnNewFolderConfirm_Click(object sender, EventArgs e)
         {
-            try
-            {
-				var success = await _commandHandler.Mkdir(txtNewFolderName.Text);
+    //        try
+    //        {
+				//var success = await _commandHandler.Mkdir(txtNewFolderName.Text);
 
-                if (success)
-                    MessageBox.Show(@"Folder " + txtDeleteFileName.Text + @" was created succesfully!", @"Success!", MessageBoxButtons.OK);
+    //            if (success)
+    //                MessageBox.Show(@"Folder " + txtDeleteFileName.Text + @" was created succesfully!", @"Success!", MessageBoxButtons.OK);
 
-            }
-            catch (Exception ex)
-            {
-                MessageBox.Show(ex.Message);
-            }
+    //        }
+    //        catch (Exception ex)
+    //        {
+    //            MessageBox.Show(ex.Message);
+    //        }
         }
 
         private void SwitchManualUiState(bool uiState)
@@ -286,9 +288,11 @@ namespace ClientApplication
 	            {
 		            Logger.InitLogger();
 		            _loggerTask = null;
-	            }
+                }
 
-				var changedFilesList = new ThreadSafeList<CustomFileHash>();
+                SwitchAutoUiState(UiConnectedState);
+
+                var changedFilesList = new ThreadSafeList<CustomFileHash>();
 				var commandResponseBuffer = new BufferBlock<byte[]>();
 
 				var tcpClient = new TcpClient(txtHostAuto.Text, Int32.Parse(txtPortAuto.Text));
@@ -307,7 +311,6 @@ namespace ClientApplication
 	            }
 	            else
                 {
-                    SwitchAutoUiState(UiConnectedState);
 
                     _commandHandler = new CommandHandler(_tcpCommunication);
 
@@ -316,11 +319,8 @@ namespace ClientApplication
 					_syncProcessor = new SyncProcessor(_commandHandler, changedFilesList);
 					filesForInitialSync.ForEach(_syncProcessor.AddChangedFile);
 
-                    //_syncProcessor.ChangedFileManager();
-                    var task = new Task(_syncProcessor.ChangedFileManager);
-                    task.Start();
-                    task.Wait();
-
+                    await _syncProcessor.ChangedFileManager();
+                    
                     Logger.WriteSyncBreakLine();
 					changedFilesList.OnAdd += changedFilesList_OnAdd;
 					_myFsWatcher = new MyFsWatcher(txtDefaultFolderAuto.Text, _syncProcessor);
@@ -349,10 +349,8 @@ namespace ClientApplication
 	    private void changedFilesList_OnAdd(object sender, EventArgs e)
 		{
 		    if (_syncProcessor.On) return;
-
-		    var task = new Task(_syncProcessor.ChangedFileManager);
-		    task.Start();
-		}
+            _syncProcessor.ChangedFileManager();
+        }
 
 	    private void LoggerAction()
 		{
@@ -454,6 +452,9 @@ namespace ClientApplication
 				Height = 400;
 				lbTrace.Visible = false;
 			}
+
+            txtUsername.Enabled = !uiState;
+            txtUserpassword.Enabled = !uiState;
 
             btnConnectAuto.Enabled = !uiState;
             btnDisconnectAuto.Enabled = uiState;

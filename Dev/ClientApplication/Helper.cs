@@ -42,10 +42,14 @@ namespace ClientApplication
 		    {
 			    return ((File.GetAttributes(path) & FileAttributes.Directory) != 0);
 		    }
-		    catch (FileNotFoundException) // when?
+		    catch (FileNotFoundException)
 		    {
 			    return false;
 		    } 
+            catch (DirectoryNotFoundException)
+            {
+                return true;
+            }
 	    }
 
 	    public static bool IsFileLocked(string fullPath)
@@ -59,30 +63,15 @@ namespace ClientApplication
             }
             catch (IOException)
             {
-                //the file is unavailable because: 
-                //  -still being written to or being processed by another thread
-                //  -does not exist (has already been processed)
                 return true;
             }
             catch (UnauthorizedAccessException)
             {
-                // Exceptia aceasta apare cand fisierul este read-only
-                // Solutie :
-                //      1. Fisierul trecut prea ReadOnly = false (bineinteles: doar in path-ul de interes -> cel de sync)
-                //      2. Returnat true (ca sa inlocuiasca IOException-ul gen)
-                //      3. Trebuie avut grija sa fie dupaia trecut inapoi pe ReadOnly = true
-                //          Idee: in loc de List<string> (lista de path-uri) -> List<clasa> ;clasa care contine FullLocalPath(string), WasReadOnly(bool), etc
-                //                  iar cand WasReadOnly = true; inainte de dequeue trecut inapoi pe ReadOnly = true;
-
                 if (fileInfo.IsReadOnly)
                 {
                     fileInfo.IsReadOnly = false;
                     return true;
                 }
-
-                // Problema: Daca e aruncata din mai multe motive ? 
-                //      1. Afla care ar putea fi motivele
-                //      2. In between o sa fie verificarea aia cu if(fileInfo.IsReadOnly) ca sa te asiguri si sa te prinzi daca vine din alta parte 
             }
             finally
             {

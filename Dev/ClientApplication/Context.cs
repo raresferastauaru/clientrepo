@@ -4,7 +4,7 @@
     {
         public static string CurrentUser
         {
-            get { return "raresf"; }
+            get { return "rares"; }
         }
 
         public static bool InAutoMode { get; set; }

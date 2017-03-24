@@ -63,19 +63,19 @@ namespace ClientApplication.APIs
                     break;
             }
         }
-
+        
         private void EnqueuingManager(FileChangeTypes fileChangeType, string fullPath, string oldFullPath = "")
         {
             var relativePath = Helper.GetRelativePath(fullPath);
-            if (_syncProcessor.InProcessingList(relativePath) || Path.GetExtension(fullPath).ToLower().Equals(".tmp"))
+
+            if (fileChangeType == FileChangeTypes.DeletedOnClient || (!Helper.IsFileLocked(fullPath)
+                && !_syncProcessor.InProcessingList(relativePath)
+                && !Path.GetExtension(fullPath).ToLower().Equals(".tmp")))
             {
-                return;
+                var fileHash = new CustomFileHash(fileChangeType, fullPath, oldFullPath);
+                _syncProcessor.AddChangedFile(fileHash);
+                Logger.WriteFileHash(fileHash);
             }
-
-            var fileHash = new CustomFileHash(fileChangeType, fullPath, oldFullPath);
-            _syncProcessor.AddChangedFile(fileHash);
-
-            Logger.WriteFileHash(fileHash);
         }
     }
 }
