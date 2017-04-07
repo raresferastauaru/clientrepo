@@ -57,7 +57,8 @@ namespace ClientApplication.Models
             FullLocalPath = fullLocalPath;
             RelativePath = Helper.GetRelativePath(fullLocalPath);
 
-            if (changeType == FileChangeTypes.DeletedOnClient)
+            if (changeType == FileChangeTypes.DeletedOnClient
+                || changeType == FileChangeTypes.CreatedOnServer)
                 return;
             else if (changeType == FileChangeTypes.RenamedOnServer)
             {

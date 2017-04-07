@@ -46,8 +46,7 @@ namespace ClientApplication
             var tabs = tabApplicationMode.TabPages;
             tabApplicationMode.SelectedTab = tabs[1];
             //tabApplicationMode.SelectedTab = tabs[0];
-
-	        btnConnectAuto_Click(null, null);
+	        //btnConnectAuto_Click(null, null);
         }
         private void tabApplicationMode_SelectedIndexChanged(object sender, EventArgs e)
         {
@@ -290,7 +289,6 @@ namespace ClientApplication
 		            _loggerTask = null;
                 }
 
-                SwitchAutoUiState(UiConnectedState);
 
                 var changedFilesList = new ThreadSafeList<CustomFileHash>();
 				var commandResponseBuffer = new BufferBlock<byte[]>();
@@ -311,7 +309,8 @@ namespace ClientApplication
 	            }
 	            else
                 {
-
+                    SwitchAutoUiState(UiConnectedState);
+                    Context.CurrentUser = txtUsername.Text;
                     _commandHandler = new CommandHandler(_tcpCommunication);
 
 					Logger.WriteInitialSyncBreakLine();

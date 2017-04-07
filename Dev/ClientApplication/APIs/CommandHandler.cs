@@ -239,7 +239,7 @@ namespace ClientApplication.APIs
 		public async Task<List<CustomFileHash>> GetAllFileHashes()
 		{
 			// Prepare and send the GETFileHashes command
-			var getFileHashesCommandBytes = Encoding.UTF8.GetBytes("GETFileHashes:" + Context.CurrentUser + ":");
+			var getFileHashesCommandBytes = Encoding.UTF8.GetBytes("GETFileHashes:");
 			_tcpCommunication.SendCommand(getFileHashesCommandBytes, 0, getFileHashesCommandBytes.Length);
 
 			// Reading all FileHashes string
@@ -269,7 +269,7 @@ namespace ClientApplication.APIs
             {
                 if (!Context.InAutoMode)
                     throw new Exception(receivedData.Split(':')[1]);
-                Logger.WriteLine("Error message in GetAllFileHashes Command: " + receivedData.Split(':')[1]);
+                Logger.WriteLine(receivedData.Split(':')[1]);
             }
 
             return serverFileHashes;

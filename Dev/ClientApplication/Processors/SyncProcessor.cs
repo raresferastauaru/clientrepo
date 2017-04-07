@@ -88,17 +88,17 @@ namespace ClientApplication.Processors
 
                             // Changes on SERVER
                             case FileChangeTypes.CreatedOnServer:
-                                if (Helper.IsDirectory(fileHash.FullLocalPath))
-                                {
+                                //if (Helper.IsDirectory(fileHash.FullLocalPath))
+                                //{
                                     Directory.CreateDirectory(fileHash.FullLocalPath);
                                     Logger.WriteLine(string.Format("{0}. Succes on dequeue: {1} ==> {2}",
                                         _dequeuedFilesCounter++, fileHash.RelativePath, fileHash.ChangeType));
-                                }
-                                else
-                                {
-                                    Logger.WriteLine(string.Format("{0}. Fail on dequeue: {1} ==> {2} - It should've been a folder here.",
-                                        _dequeuedFilesCounter++, fileHash.RelativePath, fileHash.ChangeType));
-                                }
+                                //}
+                                //else
+                                //{
+                                //    Logger.WriteLine(string.Format("{0}. Fail on dequeue: {1} ==> {2} - It should've been a folder here.",
+                                //        _dequeuedFilesCounter++, fileHash.RelativePath, fileHash.ChangeType));
+                                //}
                                 break;
 
                             case FileChangeTypes.ChangedOnServer:
