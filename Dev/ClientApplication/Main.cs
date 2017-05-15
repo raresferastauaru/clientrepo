@@ -10,7 +10,7 @@ using System.Threading.Tasks;
 using System.Threading.Tasks.Dataflow;
 using System.Windows.Forms;
 
-using ClientApplication.APIs;
+using ClientApplication.APIs; 
 using ClientApplication.Models;
 using ClientApplication.Processors;
 
@@ -18,9 +18,13 @@ namespace ClientApplication
 {
     public partial class Main : Form
     {
-        #region PrivateMembers 
-        private const string MyIp = "193.226.9.250";
-        private const string MyPort = "4445";
+        #region PrivateMembers  
+        private const string MyIp = "192.168.100.11";
+        private const string MyPort = "4444";
+
+        //private const string MyIp = "193.226.9.250";
+        //private const string MyPort = "4445";
+
         //private const string MyIp = "10.6.99.254";
         //private const string MyPort = "4444";
 
@@ -316,10 +320,9 @@ namespace ClientApplication
 					Logger.WriteInitialSyncBreakLine();
 					var filesForInitialSync = await DetermineFilesForInitialSync();
 					_syncProcessor = new SyncProcessor(_commandHandler, changedFilesList);
-					filesForInitialSync.ForEach(_syncProcessor.AddChangedFile);
-
+                    filesForInitialSync.ForEach(_syncProcessor.AddChangedFile);
                     await _syncProcessor.ChangedFileManager();
-                    
+
                     Logger.WriteSyncBreakLine();
 					changedFilesList.OnAdd += changedFilesList_OnAdd;
 					_myFsWatcher = new MyFsWatcher(txtDefaultFolderAuto.Text, _syncProcessor);
@@ -347,8 +350,8 @@ namespace ClientApplication
 
 	    private void changedFilesList_OnAdd(object sender, EventArgs e)
 		{
-		    if (_syncProcessor.On) return;
-            _syncProcessor.ChangedFileManager();
+		    if (!_syncProcessor.On) 
+                _syncProcessor.ChangedFileManager();
         }
 
 	    private void LoggerAction()
@@ -388,12 +391,11 @@ namespace ClientApplication
 			var paths = Directory.GetFiles(Helper.SyncLocation, "*", SearchOption.AllDirectories)
 									.Where(p => !p.Equals(Helper.SyncLocation + "\\desktop.ini"))
 									.ToList();
-			paths.ForEach(path => clientFileHashes.Add(new CustomFileHash(path)));
+            paths.ForEach(path => clientFileHashes.Add(new CustomFileHash(path)));
+            var serverFilesHashes = await _commandHandler.GetAllFileHashes();
+            var processedFileHashes = InitialSyncHelper.GetProcessedFileHashes(clientFileHashes, serverFilesHashes);
 
-			var serverFilesHashes = await _commandHandler.GetAllFileHashes();
-			var processedFileHashes = InitialSyncHelper.GetProcessedFileHashes(clientFileHashes, serverFilesHashes);
-
-			return processedFileHashes;
+            return processedFileHashes;
 		}
 
         private void btnDisconnectAuto_Click(object sender, EventArgs e)

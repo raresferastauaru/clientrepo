@@ -16,7 +16,7 @@ namespace ClientApplication.APIs
 
 		public CommandHandler(TcpCommunication tcpCommunication)
 		{
-			_tcpCommunication = tcpCommunication;
+			_tcpCommunication = tcpCommunication; 
 		}
 		public void Dispose()
 		{
@@ -31,12 +31,15 @@ namespace ClientApplication.APIs
 
 			await _tcpCommunication.CommandResponseBuffer.OutputAvailableAsync();
 			var readMessage = _tcpCommunication.CommandResponseBuffer.Receive();
-			var messageParts = Encoding.UTF8.GetString(readMessage).Split(':');
+            var fullMessage = Encoding.UTF8.GetString(readMessage);
+            var messageParts = fullMessage.Split(':');
 
             // If we get Acknowledge => the file exists. Beside this, we get the file details.
             if (messageParts[0].Equals("ACKNOWLEDGE"))
             {
-                if (int.Parse(messageParts[1]) > 0)
+                int fileLen;
+                var lenParsed = int.TryParse(messageParts[1], out fileLen);
+                if (fileLen > 0)
                 {
                     var offsetSize = (messageParts[0].Length                // Acknowledge
                                     + messageParts[1].Length                // MessageLength
@@ -72,13 +75,21 @@ namespace ClientApplication.APIs
                         customFileHash.FileStream.SetLength(0);
                     }
                 }
-                customFileHash.FileStream.Dispose();
+
+                if (customFileHash.FileStream != null)
+                {
+                    customFileHash.FileStream.Dispose();
+                }
 
                 // Applying the file details.
-                return Helper.ChangeFileAttributes(customFileHash.RelativePath, messageParts[2], messageParts[3], messageParts[4]);
+                return Helper.ChangeFileAttributes(customFileHash, messageParts[2], messageParts[3], messageParts[4]);
             }
 
-            customFileHash.FileStream.Dispose();
+            if (customFileHash.FileStream != null)
+            {
+                customFileHash.FileStream.Dispose();
+            }
+
             if (!Context.InAutoMode) throw new Exception(messageParts[1]);
 			Logger.WriteLine("Error message in GET Command: " + messageParts[1]);
 			return false;
@@ -237,20 +248,20 @@ namespace ClientApplication.APIs
 		}
 
 		public async Task<List<CustomFileHash>> GetAllFileHashes()
-		{
-			// Prepare and send the GETFileHashes command
-			var getFileHashesCommandBytes = Encoding.UTF8.GetBytes("GETFileHashes:");
+        {
+            // Prepare and send the GETFileHashes command
+            var getFileHashesCommandBytes = Encoding.UTF8.GetBytes("GETFileHashes:");
 			_tcpCommunication.SendCommand(getFileHashesCommandBytes, 0, getFileHashesCommandBytes.Length);
 
-			// Reading all FileHashes string
-			var memoryStream = new MemoryStream();
-			while (await _tcpCommunication.CommandResponseBuffer.OutputAvailableAsync())
-			{
-				var buffer = _tcpCommunication.CommandResponseBuffer.Receive();
-				memoryStream.Write(buffer, 0, buffer.Length);
-			}
+            // Reading all FileHashes string
+            var memoryStream = new MemoryStream();
+            while (await _tcpCommunication.CommandResponseBuffer.OutputAvailableAsync())
+            {
+                var buffer = _tcpCommunication.CommandResponseBuffer.Receive();
+                memoryStream.Write(buffer, 0, buffer.Length);
+            }
 
-			var serverFileHashes = new List<CustomFileHash>();
+            var serverFileHashes = new List<CustomFileHash>();
 			var receivedData = Encoding.UTF8.GetString(memoryStream.GetBuffer());
 
             // If we didn't got errors we start processing the received FileHashes

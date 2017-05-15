@@ -50,7 +50,7 @@ namespace ClientApplication.Models
             }
         }
 
-        public Boolean TryAdd( T item ) {
+        public bool TryAdd( T item ) {
             try {
                 if ( Equals( default( T ), item ) ) {
                     return false;

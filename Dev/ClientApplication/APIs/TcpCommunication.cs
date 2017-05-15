@@ -7,22 +7,31 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Threading.Tasks.Dataflow;
 using System.Windows.Forms;
-using ClientApplication.Models;
 using System.Threading;
+
+using ClientApplication.Models;
 
 namespace ClientApplication.APIs
 {
     public class TcpCommunication : IDisposable
     {
+        #region Properties
         private byte byteColon = Encoding.UTF8.GetBytes(":")[0];
         private byte byteEmpty = Encoding.UTF8.GetBytes("\0")[0];
+
+        private byte[] bytesEocr = Encoding.UTF8.GetBytes("EOCR:").ToArray();
+        private byte[] bytesPushNotification = Encoding.UTF8.GetBytes("PUSHNOTIFICATION:").ToArray(); //:PushNotification: ????
+
+
         private TcpClient _tcpClient;
 		private NetworkStream _networkStream;
 
-		public BufferBlock<byte[]> CommandResponseBuffer;
-	    public ThreadSafeList<CustomFileHash> ChangedFilesList;
+		public BufferBlock<byte[]> CommandResponseBuffer { get; private set; }
+	    public ThreadSafeList<CustomFileHash> ChangedFilesList { get; private set; }
+        #endregion Properties
 
-	    public TcpCommunication(TcpClient tcpClient)
+        #region ConstructorsDestructors
+        public TcpCommunication(TcpClient tcpClient)
 	    {
 		    try
 		    {
@@ -69,15 +78,16 @@ namespace ClientApplication.APIs
 			CommandResponseBuffer = null;
 			ChangedFilesList = null;
 		}
+        #endregion ConstructorsDestructors
 
-
-	    private Action AsyncReading()
+        #region ReceivedMessages
+        private Action AsyncReading()
 	    {
 			return () =>
 		    {
 			    while (true)
 			    {
-				    try
+                    try
 				    {
                         //Reading all the available data on the network stream
 					    var buffer = new byte[Helper.BufferSize];
@@ -85,13 +95,19 @@ namespace ClientApplication.APIs
 					    buffer = buffer.Take(readBytes).ToArray();
 
 					    var readData = Encoding.UTF8.GetString(buffer, 0, readBytes);
+                        var cachedData = readData;
 					    var splitedData = readData.Split(':').ToList();
                         //File.AppendAllText(@"C:\Users\rares\Desktop\TcpCommunicationUTF8.txt", "RESPONSE: " + readData + "\n");
 
                         var pushNotificationMessage = splitedData.Any(s => s.Equals("PUSHNOTIFICATION"));
 					    if (pushNotificationMessage)
 					    {
-						    ManagePushNotificationMessage(splitedData, ref buffer);
+                            // If it contains only the Push then the buffer should be EMPTY after
+                            // 2 cases: "PUSHNOTIFICATION:data4:data5:data6:EOCR:"
+                            //          ":PUSHNOTIFICATION:data4:data5:data6:EOCR:"
+                            // resulting an empty buffer.
+
+                            ManagePushNotificationMessage(splitedData, ref buffer);
 					    }
 
 					    var eocrMessage = splitedData.Any(s => s.Equals("EOCR"));
@@ -99,86 +115,141 @@ namespace ClientApplication.APIs
                         {
                             ManageEocrMessage(splitedData, buffer);
                         }
-                        else if (buffer.Length > 0)
+                        else
                         {
-                            if (buffer.Length == 1 && buffer[0].Equals(byteEmpty))
+                            // DATA message
+                            if (buffer.Length > 0)
                             {
-                                CommandResponseBuffer.Complete();
-                                CommandResponseBuffer = new BufferBlock<byte[]>();
+                                //if (buffer.Length == 1 && buffer[0].Equals(byteEmpty))
+                                //{
+                                //    Logger.WriteLine("~~~AsyncReading: buffer.Length == 1 && emptyByte. WHY ?!\n" + 
+                                //                     "~~~\tCachedData: " + cachedData);
+                                //}
+                                //else
+                                //{ 
+                                CommandResponseBuffer.Post(buffer);
+                                //}
                             }
                             else
                             {
-                                CommandResponseBuffer.Post(buffer);
+                                Logger.WriteLine("~~~AsyncReading: buffer.Length = 0. WHY ?!\n" +
+                                                 "~~~\tCachedData: " + cachedData);
                             }
                         }
-				    }
-				    catch (ObjectDisposedException)
-					{
-						// Thread is async and it tries to use an disposed object.
-						return;
-					}
-				    catch (IOException)
-					{
-						// Network stream throws this exception becouse it tries to access a broken network stream.
-						return;
-					}
-				    catch (Exception ex)
-				    {
-					    var str = "Source: " + ex.Source + "\nMessage: " + ex.Message + "\nStackTrace: " + ex.StackTrace;
-						MessageBox.Show(str, @"AsyncReading - Exception - " + ex.GetType().Name, MessageBoxButtons.OK, MessageBoxIcon.Error);
-				    }
+                    }
+                    catch (ObjectDisposedException)
+                    {
+                        // Thread is async and it tries to use a disposed object.
+                        return;
+                    }
+                    catch (IOException)
+                    {
+                        // Network stream throws this exception becouse it tries to access a broken network stream.
+                        return;
+                    }
+                    catch (Exception ex)
+                    {
+                        var str = "Source: " + ex.Source + "\nMessage: " + ex.Message + "\nStackTrace: " + ex.StackTrace;
+                        MessageBox.Show(str, @"AsyncReading - Exception - " + ex.GetType().Name, MessageBoxButtons.OK, MessageBoxIcon.Error);
+                    }
 			    }
 		    };
 	    }
 
-	    private void ManagePushNotificationMessage(List<string> splitedData, ref byte[] buffer)
+        private void ManageEocrMessage(List<string> splitedData, byte[] buffer)
+        {
+            var bytesBeforeEocr = ByteArrayHelper.IndexOfSequence(buffer, bytesEocr);
+
+            // is there a message like: ::EOCR: ???
+            if ((bytesBeforeEocr == 1 && splitedData[0].Equals("") && buffer.Count() == 6)
+               || (splitedData[0].Equals("EOCR") && buffer.Count() == 5))
+            {
+                //IF message is :EOCR: OR EOCR:
+                CommandResponseBuffer.Complete();
+                CommandResponseBuffer = new BufferBlock<byte[]>();
+            }
+            else
+            {
+                var dataBeforeEocr = buffer.Take(bytesBeforeEocr).ToArray();
+
+                // Send data before EOCR if there is some
+                if (dataBeforeEocr.Length > 0 && dataBeforeEocr[dataBeforeEocr.Length - 1].Equals(byteColon))
+                {
+                    // Cuts the ":" before EOCR and sends data.
+                    dataBeforeEocr = dataBeforeEocr.Take(dataBeforeEocr.Length - 1).ToArray();
+                    CommandResponseBuffer.Post(dataBeforeEocr);
+                }
+
+                // Wait till the buffer is empty to complete the message            !!!
+                while (CommandResponseBuffer.Count > 0)
+                    Thread.Sleep(10);
+                CommandResponseBuffer.Complete();
+                CommandResponseBuffer = new BufferBlock<byte[]>();
+
+                // Send remained data if there is some
+                var bytesToEocr = bytesBeforeEocr + 5;
+                if (bytesToEocr < buffer.Count())
+                {
+                    Logger.WriteLine("~~~AsyncReading(EOCR - RemainedData) : " + Encoding.UTF8.GetString(buffer));
+                    var dataAfterEocr = buffer.Skip(bytesToEocr).ToArray();
+                    CommandResponseBuffer.Post(dataAfterEocr);
+                }
+                // This is not necessary: else if (bytesToEocr == buffer.Count()) !!! I THINK !!!
+            }
+        }
+
+        private void ManagePushNotificationMessage(List<string> splitedData, ref byte[] buffer)
 	    {
-			var notifIndex = splitedData.IndexOf("PUSHNOTIFICATION");
+            //Logger.WriteLine("~~~PushNotifiation - BUFFER BEFORE -> " + Encoding.UTF8.GetString(buffer));
 
-			var bytesBeforePush = 0;
-			for (int i = 0; i < notifIndex; i++)
+            var indexOfPushNotif = ByteArrayHelper.IndexOfSequence(buffer, bytesPushNotification);
+
+            var dataBeforeNotif = buffer.Take(indexOfPushNotif).ToArray();
+            var dataAfterNotifWithData = buffer.Skip(indexOfPushNotif + bytesPushNotification.Length).ToArray();
+
+            // If PushNotification Contains EOCR
+            if (ByteArrayHelper.IndexOfSequence(buffer, bytesEocr) >= 0)           
 			{
-				var data = splitedData[i];
+				var eocrIndex = ByteArrayHelper.IndexOfSequence(buffer, bytesEocr);
 
-				if (!data.Equals("PUSHNOTIFICATION"))
-					bytesBeforePush += data.Length + 1;
-				else
-					break;
-			}
+                var notifDataBytes = dataAfterNotifWithData.Take(eocrIndex).ToArray();
+                var notifData = Encoding.UTF8.GetString(notifDataBytes).Split(':').ToList();
+                if (string.IsNullOrEmpty(notifData[0]))
+                    notifData.Skip(1);
 
-			var dataAfterNotif = splitedData.Skip(notifIndex + 1).ToList();
-			var dataBeforeNotif = splitedData.Take(notifIndex).ToList();
+                var dataAfterNotif = dataAfterNotifWithData.Skip(eocrIndex + 5).ToArray();
+                
+				buffer = dataBeforeNotif.Concat(dataAfterNotif).ToArray();
 
-			if (dataAfterNotif.Contains("EOCR"))
-			{
-				var eocrIndex = dataAfterNotif.IndexOf("EOCR");
-				
-				var notifData = dataAfterNotif.Take(eocrIndex).ToList();
-				var dataAfterEocr = dataAfterNotif.Skip(eocrIndex + 1).ToList();
+                // This will exclude buffer=":" (PushNotifs that start with ":") case.
+                if (buffer.Length == 1 && buffer[0] == byteColon)
+                {
+                    buffer = new byte[0];
+                }
 
-                if (notifData.Count == 2)
-                    notifData.Add("");
+                if(buffer.Length > 2 && buffer[indexOfPushNotif-1] == byteColon && buffer[indexOfPushNotif-2] == byteColon)
+                {
+                    buffer = buffer.Take(buffer.Length - 1).ToArray();
+                }
+                
+                if (buffer.Length > 0)
+                {
+                    splitedData = Encoding.UTF8.GetString(buffer).Split(':').ToList();
+                }
+                else
+                {
+                    CommandResponseBuffer.Complete();
+                    CommandResponseBuffer = new BufferBlock<byte[]>();
+                    splitedData = new List<string>();
+                }
 
+                //Logger.WriteLine("~~~PushNotifiation - BUFFER AFTER -> " + Encoding.UTF8.GetString(buffer));
                 Task.Factory.StartNew(AppendNewCustomFileHash(notifData[0], notifData[1], notifData[2]));
-				
-				var notifSize = 16 + 4 + 2;							//pushLength + eocrLength + 2x':'
-				notifData.ForEach(n => notifSize += n.Length + 1);
-				var bufferBefore = buffer.Take(bytesBeforePush).ToArray();
-				var bufferAfter = buffer.Skip(bytesBeforePush + notifSize).ToArray();
-				buffer = bufferBefore.Concat(bufferAfter).ToArray();
-
-                splitedData = Encoding.UTF8.GetString(buffer).Split(':').ToList();
-
-                //splitedData.Clear();
-                //if (dataBeforeNotif.Count > 1 && (dataBeforeNotif[0] != "" || dataBeforeNotif[0] != "\0"))
-                //	splitedData.AddRange(dataBeforeNotif);
-                //if (dataAfterEocr.Count > 1 && (dataAfterEocr[0] != "" || dataBeforeNotif[0] != "\0"))
-                //	splitedData.AddRange(dataAfterEocr);
             }
 			else
 			{
 				//read from network till EOCR occurs and then get transmited data !!
-				Logger.WriteLine("PushNotification - exception: the message was put in different chunks");
+				Logger.WriteLine("PushNotification - exception: the message was put in different chunks !! But HOW ?!");
 			}
 	    }
 
@@ -214,7 +285,7 @@ namespace ClientApplication.APIs
                         customFileHash = new CustomFileHash(FileChangeTypes.DeletedOnServer, fullLocalPath);
                         break;
                     default:
-                        message = "Received push notification ISSUE: " + command;
+                        message = string.Format("Received push notification ISSUE:\n\tCommand: {0}\n\tFileName: {1}\n\tNewFileName: {2}", command, fileName, newFileName);
                         break;
                 }
                 if (customFileHash != null)
@@ -225,59 +296,14 @@ namespace ClientApplication.APIs
                 return;
             };
         }
+        #endregion ReceivedMessages
 
-	    private void ManageEocrMessage(List<string> splitedData, byte[] buffer)
-	    {
-            //File.AppendAllText(@"C:\Users\rares\Desktop\TcpCommunicationUTF8.txt", "EOCR MSG: " + Encoding.UTF8.GetString(buffer) + "\n");
-
-            var bytesBeforeEocr = 0;
-		    for (var i = 0; i < splitedData.Count(); i++)
-		    {
-			    var data = splitedData[i];
-
-			    if (!data.Equals("EOCR"))
-				    bytesBeforeEocr += data.Length + 1;
-			    else break;
-		    }
-
-            if (bytesBeforeEocr == 1 && splitedData[0].Equals("") && buffer.Count() == 6)
-            {
-                CommandResponseBuffer.Complete();
-                CommandResponseBuffer = new BufferBlock<byte[]>();
-            }
-            else
-            {
-                var dataBeforeEocr = buffer.Take(bytesBeforeEocr).ToArray();
-
-                // Send data before EOCR if there is some
-                // We realy need to cut the last colon                              ???
-                if (dataBeforeEocr.Length > 0 && dataBeforeEocr[dataBeforeEocr.Length - 1].Equals(byteColon))
-                {
-                    //dataBeforeEocr = dataBeforeEocr.Take(dataBeforeEocr.Length - 1).ToArray();
-                    CommandResponseBuffer.Post(dataBeforeEocr);
-                }
-
-                // Wait till the buffer is empty to complete the message            !!!
-                while (CommandResponseBuffer.Count > 0)
-				    Thread.Sleep(10);
-			    CommandResponseBuffer.Complete();
-			    CommandResponseBuffer = new BufferBlock<byte[]>();
-
-                // Send remained data if there is some
-			    var bytesToEocr = bytesBeforeEocr + 5;
-			    if (bytesToEocr < buffer.Count())
-			    {
-				    var dataAfterEocr = buffer.Skip(bytesToEocr).ToArray();
-				    CommandResponseBuffer.Post(dataAfterEocr);
-			    }
-            }
-        }
-
-
-	    public void SendCommand(byte[] buffer, int offset, int count)
+        #region SentMessages
+        public void SendCommand(byte[] buffer, int offset, int count)
         {
             //File.AppendAllText(@"C:\Users\rares\Desktop\TcpCommunicationUTF8.txt", "COMMAND : " + Encoding.UTF8.GetString(buffer, offset, count) + "\n");
             _networkStream.Write(buffer, offset, count);
 	    }
+        #endregion SentMessages
     }
 }

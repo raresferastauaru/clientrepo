@@ -6,6 +6,9 @@ using System.Threading;
 
 namespace ClientApplication.Models
 {
+    /// <summary>
+    /// OBS: If a file is blocked by user, InitFileStream will block the app in that state
+    /// </summary>
     public class CustomFileHash
     {
         #region Properties
@@ -18,8 +21,8 @@ namespace ClientApplication.Models
         public int OldHashCode { get; private set; }
 		public bool WasReadOnly { get; private set; }
 		public bool IsDeleted { get; private set; }
-        public FileInfo FileInfo { get; private set; }
-        public FileStream FileStream { get; private set; }
+        public FileInfo FileInfo { get; set; }
+        public FileStream FileStream { get; set; }
         #endregion Properties
 
         #region Constructors
@@ -46,7 +49,7 @@ namespace ClientApplication.Models
         }
 
         /// <summary>
-        /// Used on EnqueuingManager from MyFsWatcher + on TcpCommunication
+        /// Used on EnqueuingManager from MyFsWatcher + on TcpCommunication (PushNotification)
         /// </summary>
         /// <param name="changeType"></param>
         /// <param name="fullLocalPath"></param>
@@ -121,7 +124,7 @@ namespace ClientApplication.Models
                 FileInfo = new FileInfo(FullLocalPath);
             }
 
-            if (changeType != FileChangeTypes.None 
+            if (changeType != FileChangeTypes.None
                 && changeType != FileChangeTypes.RenamedOnClient
                 && changeType != FileChangeTypes.RenamedOnServer)
             {

@@ -1,7 +1,9 @@
-﻿using System;
+﻿using ClientApplication.Models;
+using System;
 using System.Collections.Generic;
 using System.Configuration;
 using System.IO;
+using System.Threading;
 
 namespace ClientApplication
 {
@@ -10,7 +12,7 @@ namespace ClientApplication
 	    static Helper()
 	    {
             LogingLocation = ConfigurationManager.AppSettings["LogingLocation"] + "Log_" +
-								   DateTime.Now.ToShortDateString().Replace("/", "_") + ".txt";
+                                   DateTime.Now.ToShortDateString().Replace("/", "_") + " (0).txt";
             ValidateLoggingLocation();
             SyncLocation = ConfigurationManager.AppSettings["SyncLocation"];
             ValidateSyncLocation();
@@ -33,7 +35,7 @@ namespace ClientApplication
         }
         public static string GetLocalPath(string relativePath)
         {
-            return String.Format("{0}{1}", SyncLocation, relativePath.Replace('/', '\\'));
+            return string.Format("{0}{1}", SyncLocation, relativePath.Replace('/', '\\'));
         }
 		
 	    public static bool IsDirectory(string path)
@@ -48,7 +50,9 @@ namespace ClientApplication
 		    } 
             catch (DirectoryNotFoundException)
             {
-                return true;
+                var directoruPath = Path.GetDirectoryName(path);
+                Directory.CreateDirectory(directoruPath);
+                return false;
             }
 	    }
 
@@ -90,25 +94,47 @@ namespace ClientApplication
             if (!Directory.Exists(fullPath))
                 Directory.CreateDirectory(fullPath);
         }
-		public static bool ChangeFileAttributes(string fileName, string creationTimeTicks, string lastWriteTimeTicks, string isReadOnlyString)
-		{
-			//try
-			var fullPath = GetLocalPath(fileName);
-			var creationTime = new DateTime(long.Parse(creationTimeTicks));
-			var lastWriteTime = new DateTime(long.Parse(lastWriteTimeTicks));
-			var isReadOnly = bool.Parse(isReadOnlyString);
+		public static bool ChangeFileAttributes(CustomFileHash customFileHash, string creationTimeTicks, string lastWriteTimeTicks, string isReadOnlyString)
+        {
+            var fullPath = GetLocalPath(customFileHash.RelativePath);
 
-			File.SetCreationTimeUtc(fullPath, creationTime);
-			File.SetLastWriteTimeUtc(fullPath, lastWriteTime);
+            var numberOfRetries = 5;
+            var delayOnRetry = 100;
+            for (int i = 1; i <= numberOfRetries; ++i)
+            {
+                try
+                {
+                    if (customFileHash.FileInfo == null)
+                        customFileHash.FileInfo = new FileInfo(fullPath);
 
-			var fileAttributes = File.GetAttributes(fullPath);
-			if (isReadOnly)
-				fileAttributes |= FileAttributes.ReadOnly;
+                    customFileHash.FileInfo.CreationTimeUtc = new DateTime(long.Parse(creationTimeTicks));
+                    customFileHash.FileInfo.LastWriteTimeUtc = new DateTime(long.Parse(lastWriteTimeTicks));
 
-			File.SetAttributes(fullPath, fileAttributes);
-			//catch(Exception ex) { return false; }
-			return true;
-		}
+                    var isReadOnly = bool.Parse(isReadOnlyString);
+                    var fileAttributes = File.GetAttributes(fullPath);
+                    if (isReadOnly)
+                        fileAttributes |= FileAttributes.ReadOnly;
+
+                    customFileHash.FileInfo.Attributes = fileAttributes;
+
+                    return true;
+                }
+                catch (IOException ex)
+                {
+                    var msg = string.Format("Helper (ChangeFileAttributes - {0}): \n\tRetry number: {1} of {2}\n\tMessage: {3}\n\tStackTrace: {4}", 
+                        fullPath, i, numberOfRetries, ex.Message, ex.StackTrace);
+                    Logger.WriteLine(msg);
+
+                    if (i == numberOfRetries)
+                        return false;
+
+                    Thread.Sleep(delayOnRetry);
+                }
+            }
+
+            Logger.WriteLine("Helper - ChangeFileAttributes - WHY DID IT GOT HERE ?!");
+            return false;
+        }
 
 
 
@@ -125,7 +151,8 @@ namespace ClientApplication
             for (int i = 1; ; ++i)
             {
                 if (File.Exists(LogingLocation))
-                    LogingLocation = Path.Combine(dirPath, fileName + "(" + i + ")" + fileExt);
+                    LogingLocation = LogingLocation.Replace("(" + (i - 1) + ")", "(" + i + ")");
+                //Path.Combine(dirPath, fileName + " (" + i + ")" + fileExt);
                 else
                     return;
             }
