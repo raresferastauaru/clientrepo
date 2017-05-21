@@ -19,14 +19,14 @@ namespace ClientApplication
     public partial class Main : Form
     {
         #region PrivateMembers  
-        private const string MyIp = "192.168.100.11";
-        private const string MyPort = "4444";
+        //private const string MyIp = "192.168.100.11";
+        //private const string MyPort = "4444";
 
         //private const string MyIp = "193.226.9.250";
         //private const string MyPort = "4445";
 
-        //private const string MyIp = "10.6.99.254";
-        //private const string MyPort = "4444";
+        private const string MyIp = "10.6.99.254";
+        private const string MyPort = "4444";
 
         private const bool UiConnectedState = true;
 		private const bool UiDisconnectedState = false;
@@ -284,8 +284,7 @@ namespace ClientApplication
 	            if (Helper.TraceEnabled)
 	            {
 		            Logger.InitLogger(true);
-//		            _cancelationToken = _tokenSource.Token;
-					_loggerTask = Task.Factory.StartNew(LoggerAction);//, _cancelationToken);
+					_loggerTask = Task.Factory.StartNew(LoggerAction);
 	            }
 	            else
 	            {
@@ -349,8 +348,8 @@ namespace ClientApplication
         }
 
 	    private void changedFilesList_OnAdd(object sender, EventArgs e)
-		{
-		    if (!_syncProcessor.On) 
+        {
+            if (!_syncProcessor.On)
                 _syncProcessor.ChangedFileManager();
         }
 

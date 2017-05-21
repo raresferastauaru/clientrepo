@@ -46,9 +46,16 @@ Network Trash Folder
 Temporary Items
 .apdisk
 
-# Custom ignores
+# Custom DEV ignores
 Dev/ClientApplication/bin/*
 Dev/ClientApplication/obj/*
-/Dev/packages/System.Threading.Tasks.Dataflow.4.7.0
+Dev/packages/*
+
+# Custom DEV 2.0 ignores (WPF project)
+Dev2.0/ClientApplication/bin/*
+Dev2.0/ClientApplication/obj/*
+Dev2.0/packages/*
+
+# Other ignores
 *.suo
 /*.rar
