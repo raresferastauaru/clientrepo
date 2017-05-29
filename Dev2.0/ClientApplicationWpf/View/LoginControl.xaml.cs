@@ -8,7 +8,7 @@ namespace ClientApplicationWpf.View
         public LoginControl()
         {
             InitializeComponent();
-            userPassword.Password = "passw1";
+            userPassword.Password = Helper.UserPassword;
         }
 
         private void PasswordBox_PasswordChanged(object sender, System.Windows.RoutedEventArgs e)

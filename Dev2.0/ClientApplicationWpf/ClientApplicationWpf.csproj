@@ -58,6 +58,7 @@
     <Reference Include="System" />
     <Reference Include="System.configuration" />
     <Reference Include="System.Data" />
+    <Reference Include="System.Drawing" />
     <Reference Include="System.Runtime.Serialization" />
     <Reference Include="System.Threading.Tasks.Dataflow, Version=4.6.1.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL">
       <HintPath>..\packages\System.Threading.Tasks.Dataflow.4.7.0\lib\portable-net45+win8+wpa81\System.Threading.Tasks.Dataflow.dll</HintPath>
@@ -90,6 +91,7 @@
     <Compile Include="APIs\MyFsWatcher.cs" />
     <Compile Include="APIs\SyncProcessor.cs" />
     <Compile Include="APIs\TcpCommunication.cs" />
+    <Compile Include="Behaviors\ListBoxBehavior.cs" />
     <Compile Include="Helpers\ByteArrayHelper.cs" />
     <Compile Include="Helpers\Helper.cs" />
     <Compile Include="Helpers\InitialSyncHelper.cs" />
@@ -98,10 +100,12 @@
     <Compile Include="Messages\LoginCancelingMsg.cs" />
     <Compile Include="Messages\LoginRequestMsg.cs" />
     <Compile Include="Messages\LoginSuccededMsg.cs" />
+    <Compile Include="Messages\LogoutMsg.cs" />
     <Compile Include="Messages\TraceItemAddedMsg.cs" />
     <Compile Include="Model\CustomFileHash.cs" />
     <Compile Include="Model\FileChangeTypes.cs" />
     <Compile Include="Model\ThreadSafeList.cs" />
+    <Compile Include="Model\UiState.cs" />
     <Compile Include="ViewModel\TraceItemViewModel.cs" />
     <Compile Include="ViewModel\LoginViewModel.cs" />
     <Compile Include="ViewModel\MainViewModel.cs" />
@@ -154,7 +158,6 @@
   <ItemGroup>
     <None Include="App.config" />
   </ItemGroup>
-  <ItemGroup />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
        Other similar extension points exist, see Microsoft.Common.targets.

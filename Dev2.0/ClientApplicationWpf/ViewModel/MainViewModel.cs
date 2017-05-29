@@ -14,6 +14,8 @@ using System.IO;
 using ClientApplicationWpf.Helpers;
 using System.Linq;
 using System.Collections.ObjectModel;
+using GalaSoft.MvvmLight.Command;
+using System.Threading;
 
 namespace ClientApplicationWpf.ViewModel
 {
@@ -74,6 +76,71 @@ namespace ClientApplicationWpf.ViewModel
             }
         }
 
+        private Visibility _userDetailsVisibility = Visibility.Hidden;
+        public Visibility UserDetailsVisibility
+        {
+            get
+            {
+                return _userDetailsVisibility;
+            }
+
+            set
+            {
+                if (_userDetailsVisibility == value)
+                    return;
+                _userDetailsVisibility = value;
+                RaisePropertyChanged(() => UserDetailsVisibility);
+            }
+        }
+
+        private Visibility _pauseVisibility = Visibility.Hidden;
+        public Visibility PauseVisibility
+        {
+            get
+            {
+                return _pauseVisibility;
+            }
+
+            set
+            {
+                if (_pauseVisibility == value)
+                    return;
+                _pauseVisibility = value;
+                RaisePropertyChanged(() => PauseVisibility);
+            }
+        }
+
+        public string ConnectedUserName
+        {
+            get { return _loginViewModel.UserName; }
+        }
+
+        private bool _syncOnPause;
+        public bool SyncOnPause
+        {
+            get { return _syncOnPause; }
+            set
+            {
+                _syncOnPause = value;
+                RaisePropertyChanged(() => SyncOnPause);
+            }
+        }
+
+        private bool _traceEnabled;
+        public bool TraceEnabled
+        {
+            get { return _traceEnabled; }
+            set
+            {
+                if (_traceEnabled == value)
+                    return;
+
+                _traceEnabled = value;
+                RaisePropertyChanged(() => TraceEnabled);
+            }
+        }
+        
+
         private CommandHandler _commandHandler;
         public CommandHandler CommandHandler
         {
@@ -118,24 +185,52 @@ namespace ClientApplicationWpf.ViewModel
         }
         #endregion PublicProperties
 
+        #region Commands
+        public RelayCommand LogoutCommand { get; private set; }
+        public RelayCommand PlayPauseCommand { get; private set; }
+
+        private void DoLogout()
+        {
+            var result = MessageBox.Show("Are you sure you want to close logout from the application ?", "Confirmation", MessageBoxButton.YesNo, MessageBoxImage.Question);
+
+            if (result == MessageBoxResult.Yes)
+            {
+                TraceItems.Clear();
+                ManageUserLogout();
+                SetupLayout(UiState.LoggedOut);
+            }
+        }
+
+        private void DoPlayPause()
+        {
+            if(SyncOnPause)
+            {
+                // OnPause
+                ManageUserLogout();
+                SetupLayout(UiState.OnPause);
+            }
+            else
+            {
+                // OnPlay
+                SetupLayout(UiState.LoggedIn);
+                ManageUserLogin();
+            }
+        }
+        #endregion Commands
+
         public MainViewModel(LoginViewModel loginViewModel)
         {
-            //InitializeHelper();
-
             _loginViewModel = loginViewModel;
             _loginVisibility = Visibility.Visible;
             _traceVisibility = Visibility.Collapsed;
+
+            LogoutCommand = new RelayCommand(DoLogout);
+            PlayPauseCommand = new RelayCommand(DoPlayPause);
 
             _traceItems = new ObservableCollection<TraceItemViewModel>();
 
             RegisterMesseges();
         }
-
-        //private void InitializeHelper()
-        //{
-        //    var type = typeof(Helper);
-        //    System.Runtime.CompilerServices.RuntimeHelpers.RunClassConstructor(type.TypeHandle);
-        //}
 
         private void RegisterMesseges()
         {
@@ -182,12 +277,12 @@ namespace ClientApplicationWpf.ViewModel
                 if (message[0].Equals("Error"))
                 {
                     _tcpCommunication.Dispose();
-                    LoginVisibility = Visibility.Visible;
                     Messenger.Default.Send(new LoginFailedMsg());
                     MessageBox.Show(message[1], @"Invalid user or password");
                 }
                 else
                 {
+                    RaisePropertyChanged(() => ConnectedUserName);
                     Logger.InitLogger(Helper.TraceEnabled);
                     Logger.WriteInitialSyncBreakLine();
 
@@ -196,8 +291,8 @@ namespace ClientApplicationWpf.ViewModel
                     _syncProcessor = new SyncProcessor(_commandHandler, changedFilesList);
                     filesForInitialSync.ForEach(_syncProcessor.AddChangedFile);
 
-                    LoginVisibility = Visibility.Hidden;
-                    TraceVisibility = Visibility.Visible;
+                    SetupLayout(UiState.LoggedIn);
+
                     Messenger.Default.Send(new LoginSuccededMsg());
 
                     await _syncProcessor.ChangedFileManager();
@@ -215,7 +310,7 @@ namespace ClientApplicationWpf.ViewModel
                 var str = "Message: " + ex.Message +
                           "\nSource: " + ex.Source +
                           "\nStackTrace: " + ex.StackTrace;
-                MessageBox.Show(str, @"Syncroniser - FormatException");
+                MessageBox.Show(str, @"Synchroniser - Format Exception");
             }
             catch (SocketException ex)
             {
@@ -225,7 +320,7 @@ namespace ClientApplicationWpf.ViewModel
                 var str = "Message: " + ex.Message +
                           "\nSource: " + ex.Source +
                           "\nStackTrace: " + ex.StackTrace;
-                MessageBox.Show(str, @"Syncroniser - SocketException");
+                MessageBox.Show(str, @"Synchroniser - Socket Exception");
             }
             catch (Exception ex)
             {
@@ -236,8 +331,20 @@ namespace ClientApplicationWpf.ViewModel
                           "\nSource: " + ex.Source +
                           "\nException Type: " + ex.GetType() +
                           "\nStackTrace: " + ex.StackTrace;
-                MessageBox.Show(str, @"Syncroniser - Exception\nMessage: " + ex.Message);
+                MessageBox.Show(str, @"Synchroniser - Exception");
             }
+        }
+
+        private void ManageUserLogout()
+        {
+            // Wait for SyncProcessor to be EMPTY first !!!
+            while (_syncProcessor.On)
+                Task.Delay(100);
+
+            _commandHandler.Kill();
+
+            _myFsWatcher.Dispose();
+            Thread.Sleep(100);
         }
 
         private void changedFilesList_OnAdd(object sender, EventArgs e)
@@ -257,6 +364,37 @@ namespace ClientApplicationWpf.ViewModel
             var processedFileHashes = InitialSyncHelper.GetProcessedFileHashes(clientFileHashes, serverFilesHashes);
 
             return processedFileHashes;
+        }
+
+
+
+        private void SetupLayout(UiState uiState)
+        {
+            switch (uiState)
+            {
+                case UiState.OnPause:
+                    TraceEnabled = false;
+                    PauseVisibility = Visibility.Visible;
+                    break;
+
+                case UiState.LoggedOut:
+                    LoginVisibility = Visibility.Visible;
+                    TraceVisibility = Visibility.Collapsed;
+                    UserDetailsVisibility = Visibility.Collapsed;
+
+                    TraceEnabled = true;
+                    PauseVisibility = Visibility.Hidden;
+                    break;
+
+                case UiState.LoggedIn:
+                    LoginVisibility = Visibility.Hidden;
+                    TraceVisibility = Visibility.Visible;
+                    UserDetailsVisibility = Visibility.Visible;
+
+                    TraceEnabled = true;
+                    PauseVisibility = Visibility.Hidden;
+                    break;
+            }
         }
     }
 }

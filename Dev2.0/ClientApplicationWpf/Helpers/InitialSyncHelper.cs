@@ -81,14 +81,25 @@ namespace ClientApplicationWpf.Helpers
                         }
                         else
                         {
-                            message = string.Format("{0}. RENAME: {1} to {2} (New name on CLIENT)", contor++,
-                                serverFileHash.RelativePath, localFileHash.RelativePath);
+                            //Determine if the file was moved. (OnClient) -----> Maybe you should do the same OnServer?
+                            //var fileWasMoved = Helper.WasFileMoved(localFileHash.RelativePath, serverFileHash.RelativePath);
 
-                            initialSyncFiles.Add(new CustomFileHash(FileChangeTypes.RenamedOnClient,
-                                localFileHash.RelativePath, serverFileHash.RelativePath,
-                                serverFileHash.HashCode, serverFileHash.OldHashCode));
+                            //if (!fileWasMoved)
+                            //{
+                                message = string.Format("{0}. RENAME: {1} to {2} (New name on CLIENT)", contor++,
+                                  serverFileHash.RelativePath, localFileHash.RelativePath);
+
+                                initialSyncFiles.Add(new CustomFileHash(FileChangeTypes.RenamedOnClient,
+                                    localFileHash.RelativePath, serverFileHash.RelativePath,
+                                    serverFileHash.HashCode, serverFileHash.OldHashCode));
+                            //}
+                            //else
+                            //{
+                            //    message = string.Format("{0}. UP TO DATE: {1}! --- {2}", contor++, localFileHash.RelativePath,
+                            //        localFileHash.GetFileHashBasicDetails());
+                            //}
+
                             blackList.Add(localFileHash);
-
                             /// WHAT HASHCODES SHOULD WE SEND ?!?!serverFileHash
                             /// how is the Changed & Renamed file handled ?!?!?!
                         }

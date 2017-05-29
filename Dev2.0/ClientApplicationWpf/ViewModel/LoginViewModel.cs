@@ -96,6 +96,19 @@ namespace ClientApplicationWpf.ViewModel
             }
         }
 
+        private bool _rememberUser;
+        public bool RememberUserDetails
+        {
+            get { return _rememberUser; }
+            set
+            {
+                if (_rememberUser == value)
+                    return;
+                _rememberUser = value;
+                RaisePropertyChanged(() => RememberUserDetails);
+            }
+        }
+
         private bool _configureApp = false;
         public bool ConfigureApp
         {
@@ -121,29 +134,11 @@ namespace ClientApplicationWpf.ViewModel
         }
         #endregion Properties
 
-        public LoginViewModel()
-        {
-            UserName = "rares";
-            SyncFolderLocation = Helper.SyncLocation;
-            LoggerFolderLocation = Helper.LoggerLocation;
-            ConfigureApp = false;
-
-            LoginCommand = new RelayCommand(DoLogin);
-            CancelCommand = new RelayCommand(DoCancel);
-            BrowseSyncFolder = new RelayCommand(DoBrowseSyncFolder);
-            BrowseLoggingFolder = new RelayCommand(DoBrowseLoggingFolder);
-
-            BoxesEnabled = true;
-            Loading = Visibility.Hidden;
-
-            RegisterMesseges();
-        }
-
         #region Commands
         public RelayCommand LoginCommand { get; private set; }
         public RelayCommand CancelCommand { get; private set; }
-        public RelayCommand BrowseSyncFolder { get; private set; }
-        public RelayCommand BrowseLoggingFolder { get; private set; }
+        public RelayCommand BrowseSyncFolderCommand { get; private set; }
+        public RelayCommand BrowseLoggingFolderCommand { get; private set; }
 
         private void RegisterMesseges()
         {
@@ -171,6 +166,19 @@ namespace ClientApplicationWpf.ViewModel
                 Helper.LoggerLocation = LoggerFolderLocation;
             }
 
+            if (RememberUserDetails)
+            {
+                Helper.UserName = UserName;
+                Helper.UserPassword = UserPassword;
+            }
+            else
+            {
+                Helper.UserName = "";
+                Helper.UserPassword = "";
+            }
+            Helper.RememberUserDetails = RememberUserDetails;
+
+            RaisePropertyChanged(() => UserName);
             Messenger.Default.Send(new LoginRequestMsg());
         }
 
@@ -206,5 +214,24 @@ namespace ClientApplicationWpf.ViewModel
 
         }
         #endregion Commands
+
+        public LoginViewModel()
+        {
+            UserName = Helper.UserName;
+            RememberUserDetails = Helper.RememberUserDetails;
+            SyncFolderLocation = Helper.SyncLocation;
+            LoggerFolderLocation = Helper.LoggerLocation;
+            ConfigureApp = false;
+
+            LoginCommand = new RelayCommand(DoLogin);
+            CancelCommand = new RelayCommand(DoCancel);
+            BrowseSyncFolderCommand = new RelayCommand(DoBrowseSyncFolder);
+            BrowseLoggingFolderCommand = new RelayCommand(DoBrowseLoggingFolder);
+
+            BoxesEnabled = true;
+            Loading = Visibility.Hidden;
+
+            RegisterMesseges();
+        }
     }
 }

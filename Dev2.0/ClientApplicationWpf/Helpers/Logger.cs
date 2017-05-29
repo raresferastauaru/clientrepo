@@ -46,7 +46,7 @@ namespace ClientApplicationWpf
         public static void WriteFileHash(CustomFileHash customFileHash)
         {
             var str = string.Format(
-                "{0}. File Change Enqueued:\n\tRelativePath: {1}\n\tChangeType: {2}\n\tHashCode: {3}\n\tReadOnly: {4}\n",
+                "{0}. File Change Enqueued: RelativePath: {1} - ChangeType: {2}\n\tHashCode: {3}\n\tReadOnly: {4}\n",
                 _enqueuedFilesCounter++,
                 customFileHash.RelativePath,
                 customFileHash.ChangeType,

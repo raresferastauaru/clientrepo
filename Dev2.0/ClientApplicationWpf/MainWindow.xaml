@@ -6,13 +6,82 @@
         xmlns:local="clr-namespace:ClientApplicationWpf"
         xmlns:views="clr-namespace:ClientApplicationWpf.View"
         xmlns:fa="http://schemas.fontawesome.io/icons/"
+        xmlns:behaviors="clr-namespace:ClientApplicationWpf.Behaviors"
         mc:Ignorable="d"
-        Title="Client Application" 
+        Title="File Synchroniser" 
         Height="450" Width="650"
         WindowStartupLocation="CenterScreen"
+        RenderOptions.BitmapScalingMode="Fant"
         DataContext="{Binding MainVM, Source={StaticResource Locator}}">
     
-    <Grid VerticalAlignment="Center" HorizontalAlignment="Center">
+    <Window.Resources>
+        <Style  TargetType="{x:Type ListBoxItem}">
+            <Style.Triggers>
+                <Trigger Property="ItemsControl.AlternationIndex" Value="0">
+                    <Setter Property="Background" Value="Aqua"></Setter>
+                </Trigger>
+                <Trigger Property="ItemsControl.AlternationIndex" Value="1">
+                    <Setter Property="Background" Value="White"></Setter>
+                </Trigger>
+            </Style.Triggers>
+        </Style>
+        
+        <Style x:Key="ButtonFocusVisual">
+            <Setter Property="Control.Template">
+                <Setter.Value>
+                    <ControlTemplate>
+                        <Rectangle Margin="2" SnapsToDevicePixels="true" Stroke="{DynamicResource {x:Static SystemColors.ControlTextBrushKey}}" StrokeThickness="1" StrokeDashArray="1 2"/>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+        <LinearGradientBrush x:Key="ButtonNormalBackground" EndPoint="0,1" StartPoint="0,0">
+            <GradientStop Color="#F3F3F3" Offset="0"/>
+            <GradientStop Color="#EBEBEB" Offset="0.5"/>
+            <GradientStop Color="#DDDDDD" Offset="0.5"/>
+            <GradientStop Color="#CDCDCD" Offset="1"/>
+        </LinearGradientBrush>
+        <SolidColorBrush x:Key="ButtonNormalBorder" Color="#FF707070"/>
+        <Style x:Key="ToggleButtonStyle1" TargetType="{x:Type ToggleButton}">
+            <Setter Property="FocusVisualStyle" Value="{StaticResource ButtonFocusVisual}"/>
+            <Setter Property="Background" Value="{StaticResource ButtonNormalBackground}"/>
+            <Setter Property="BorderBrush" Value="{StaticResource ButtonNormalBorder}"/>
+            <Setter Property="BorderThickness" Value="1"/>
+            <Setter Property="Foreground" Value="{DynamicResource {x:Static SystemColors.ControlTextBrushKey}}"/>
+            <Setter Property="HorizontalContentAlignment" Value="Center"/>
+            <Setter Property="VerticalContentAlignment" Value="Center"/>
+            <Setter Property="Padding" Value="1"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="{x:Type ToggleButton}">
+                        <StackPanel Orientation="Horizontal">
+                            <Border x:Name="on" Width="35" Height="25" Background="LightGray" CornerRadius="4,0,0,4">
+                                <TextBlock x:Name="onText" Text="Sync" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                            </Border>
+                            <Border x:Name="off" Width="35" Height="25" Background="LightBlue" CornerRadius="0,4,4,0">
+                                <TextBlock x:Name="offText" Text="Pause" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                            </Border>
+                        </StackPanel>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsEnabled" Value="false">
+                                <Setter Property="Foreground" Value="#ADADAD"/>
+                            </Trigger>
+                            <Trigger Property="IsChecked" Value="True">
+                                <Setter TargetName="on" Property="Background" Value="LightGray"/>
+                                <Setter TargetName="onText" Property="Foreground" Value="White"/>
+                            </Trigger>
+                            <Trigger Property="IsChecked" Value="False">
+                                <Setter TargetName="off" Property="Background" Value="LightBlue"/>
+                                <Setter TargetName="offText" Property="Foreground" Value="White"/>
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+    </Window.Resources>
+
+    <Grid VerticalAlignment="Stretch" Width="Auto" Height="Auto">
         <Grid.RowDefinitions>
             <RowDefinition Height="*"/>
         </Grid.RowDefinitions>
@@ -20,18 +89,64 @@
             <ColumnDefinition Width="*"/>
         </Grid.ColumnDefinitions>
         
-        <Border Grid.Row="0" Grid.Column="0" Visibility="{Binding LoginVisibility}">
-            <views:LoginControl />
+        <Border Grid.Row="0" Grid.Column="0" Visibility="{Binding LoginVisibility}" VerticalAlignment="Center">
+            <views:LoginControl/>
         </Border>
 
-        <Border Grid.Row="0" Grid.Column="0" Visibility="{Binding TraceVisibility}">
-            <ListBox x:Name="listBox" ItemsSource="{Binding Path=TraceItems, Mode=TwoWay}" MinHeight="300" MinWidth="300" Margin="3 3 3 3" AlternationCount="2" >
-                <ListBox.ItemTemplate>
-                    <DataTemplate>
-                        <Label Content="{Binding Text}" Height="26"/>
-                    </DataTemplate>
-                </ListBox.ItemTemplate>
-            </ListBox>
+        <Grid Grid.Row="0" Grid.Column="0" VerticalAlignment="Stretch">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="*"/>
+            </Grid.RowDefinitions>
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*"/>
+            </Grid.ColumnDefinitions>
+
+            <StackPanel Grid.Row="0" Grid.Column="0" Orientation="Horizontal" VerticalAlignment="Top" HorizontalAlignment="Right" 
+                        Visibility="{Binding UserDetailsVisibility}">
+                
+                <Label Content="User: "/>
+                <Label Content="{Binding ConnectedUserName}" />
+
+                <GridSplitter Width="3" HorizontalAlignment="Stretch" Margin="10 5 10 5" IsEnabled="False"/>
+                <ToggleButton Content="" Style="{StaticResource ToggleButtonStyle1}" Margin="0 3 0 3"
+                              IsChecked="{Binding SyncOnPause}" Command="{Binding PlayPauseCommand}"/>
+
+                <GridSplitter Width="3" HorizontalAlignment="Stretch" Margin="10 5 10 5" IsEnabled="False"/>
+
+                <Button Content="Logout" Background="LightBlue" Command="{Binding LogoutCommand}" Margin="0 3 3 3">
+                    <Button.Template>
+                        <ControlTemplate>
+                            <Border CornerRadius="4 4 4 4" Background="LightBlue">
+                                <TextBlock Text="Logout" Foreground="White" HorizontalAlignment="Center" VerticalAlignment="Center" Padding="2"/>
+                            </Border>
+                        </ControlTemplate>
+                    </Button.Template>
+                </Button>
+            </StackPanel>
+
+            <Border Grid.Row="1" Grid.Column="0" Visibility="{Binding TraceVisibility}">
+                <ListBox x:Name="listBox" ItemsSource="{Binding Path=TraceItems, Mode=TwoWay}" MinHeight="300" MinWidth="300" AlternationCount="2"
+                         ScrollViewer.VerticalScrollBarVisibility="Visible" ScrollViewer.HorizontalScrollBarVisibility="Disabled"
+                         IsEnabled="{Binding TraceEnabled}" behaviors:ListBoxBehavior.ScrollOnNewItem="True">
+                    <ListBox.Style>
+                        <Style TargetType="{x:Type ListBox}">
+                            <Style.Resources>
+                                <SolidColorBrush x:Key="{x:Static SystemColors.ControlBrushKey}" Color="Gray"/>
+                            </Style.Resources>
+                        </Style>
+                    </ListBox.Style>
+                    <ListBox.ItemTemplate>
+                        <DataTemplate>
+                            <Label Content="{Binding Text}" VerticalAlignment="Center" Height="27" Margin="0 0 0 0"/>
+                        </DataTemplate>
+                    </ListBox.ItemTemplate>
+                </ListBox>
+            </Border>
+        </Grid>
+
+        <Border Grid.Row="0" Grid.Column="0" Visibility="{Binding PauseVisibility}" VerticalAlignment="Center">
+            <fa:ImageAwesome Icon="Pause" Height="64" Width="64"/>
         </Border>
     </Grid>
 </Window>

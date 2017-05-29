@@ -41,6 +41,8 @@ namespace ClientApplicationWpf.APIs
                 var lenParsed = int.TryParse(messageParts[1], out fileLen);
                 if (fileLen > 0)
                 {
+                    customFileHash.FileStream.SetLength(0);
+
                     var offsetSize = (messageParts[0].Length                // Acknowledge
                                     + messageParts[1].Length                // MessageLength
                                     + messageParts[2].Length                // CreationTime

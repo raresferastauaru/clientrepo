@@ -8,11 +8,13 @@
              mc:Ignorable="d" 
              Width="630"
              Height="250"
-             Background="White"
+             Background="Aqua"
              DataContext="{Binding LoginVM, Source={StaticResource Locator}}" >
 
     <Grid HorizontalAlignment="Center" VerticalAlignment="Center" Width="510">
         <Grid.RowDefinitions>
+            <RowDefinition Height="40"/>
+            <RowDefinition Height="28"/>
             <RowDefinition Height="28"/>
             <RowDefinition Height="28"/>
             <RowDefinition Height="*"/>
@@ -26,46 +28,52 @@
             <ColumnDefinition Width="Auto"/>
         </Grid.ColumnDefinitions>
 
-        <Label Content="Nume utilizator:" Grid.Row="0" Grid.Column="0" />
-        <TextBox Margin="2 2 2 2" Grid.Row="0" Grid.Column="1" Width="Auto" Text="{Binding UserName}" IsEnabled="{Binding BoxesEnabled}" Name="userName"/>
+        <Label Grid.Row="0" Grid.Column="1" VerticalAlignment="Center" Margin="15 0 0 0"
+               FontSize="18" Content="Authentication" />
 
-        <Label Content="Parola: " Grid.Row="1" Grid.Column="0" />
-        <PasswordBox Margin="2 2 2 2"  Grid.Row="1" Grid.Column="1" Width="Auto" PasswordChanged="PasswordBox_PasswordChanged" Name="userPassword" Password="" IsEnabled="{Binding BoxesEnabled}">
+        <Label Content="User name:" Grid.Row="1" Grid.Column="0" />
+        <TextBox Margin="2 2 2 2" Grid.Row="1" Grid.Column="1" Width="Auto" Text="{Binding UserName}" IsEnabled="{Binding BoxesEnabled}" Name="userName"/>
+
+        <Label Content="Password: " Grid.Row="2" Grid.Column="0" />
+        <PasswordBox Margin="2 2 2 2"  Grid.Row="2" Grid.Column="1" Width="Auto" PasswordChanged="PasswordBox_PasswordChanged" Name="userPassword" Password="" IsEnabled="{Binding BoxesEnabled}">
             <PasswordBox.InputBindings>
                 <KeyBinding Key="Enter" Command="{Binding LoginCommand}"/>
             </PasswordBox.InputBindings>
         </PasswordBox>
 
-        <Label Content="Configurare: " Grid.Row="2" Grid.Column="0"/>
-        <CheckBox Grid.Row="2" Grid.Column="1" VerticalAlignment="Center" HorizontalAlignment="Center"
+        <fa:ImageAwesome Icon="Refresh" Spin="True" Height="42" Width="42" Margin="6" 
+            Grid.Row="1" Grid.Column="2" Grid.RowSpan="2" Visibility="{Binding Loading}"/>
+
+        <StackPanel Grid.Row="3" Grid.Column="1" Orientation="Horizontal" HorizontalAlignment="Center">
+            <CheckBox VerticalAlignment="Center" HorizontalAlignment="Center" Content="Remember me"
+                  IsChecked="{Binding RememberUserDetails}"/>
+            <GridSplitter Width="3" HorizontalAlignment="Stretch" Margin="10 5 10 5" IsEnabled="False" Background="SkyBlue"/>
+            <CheckBox VerticalAlignment="Center" HorizontalAlignment="Center" Content="Configuration"
                   IsChecked="{Binding ConfigureApp}"/>
-
-        <Label Content="Sync folder " Grid.Row="3" Grid.Column="0" 
-                 Visibility="{Binding ConfiguringApp}" Height="30" VerticalAlignment="Top"/>
-        <TextBox Grid.Row="3" Grid.Column="1" Margin="2 2 2 2" IsEnabled="False" 
-                 Visibility="{Binding ConfiguringApp}"
-                 Text="{Binding SyncFolderLocation, Mode=OneWay}"/>
-        <Button Content="..." Grid.Row="3" Grid.Column="2" Margin="10 5 10 5"
-                 Visibility="{Binding ConfiguringApp}"
-                 Command="{Binding BrowseSyncFolder}"/>
-
-        <Label Content="Logger folder: " Grid.Row="4" Grid.Column="0"
-                 Visibility="{Binding ConfiguringApp}"/>
-        <TextBox Grid.Row="4" Grid.Column="1" Margin="2 2 2 2" IsEnabled="False"
-                 Visibility="{Binding ConfiguringApp}"
-                 Text="{Binding LoggerFolderLocation, Mode=OneWay}"/>
-        <Button Content="..." Grid.Row="4" Grid.Column="2" Margin="10 5 10 5"
-                Visibility="{Binding ConfiguringApp}"
-                 Command="{Binding BrowseLoggingFolder}"/>
-        
-
-        <StackPanel Grid.Row="5" Grid.Column="1" Orientation="Horizontal" HorizontalAlignment="Center">
-            <Button Margin="2 2 5 2" Grid.Row="0" Grid.Column="0" Width="75" Content="OK" Command="{Binding LoginCommand}"  IsEnabled="{Binding BoxesEnabled}" Height="20" VerticalAlignment="Top"/>
-            <Button Margin="5 2 2 2" Grid.Row="0" Grid.Column="1" Width="75" Content="Cancel" Command="{Binding CancelCommand}"  IsEnabled="{Binding BoxesEnabled}"/>
         </StackPanel>
 
-        <fa:ImageAwesome Icon="Refresh" Spin="True" Height="42" Width="42" Margin="6" 
-            Grid.Row="0" Grid.Column="2" Grid.RowSpan="2" Visibility="{Binding Loading}"/>
+        <Label Content="Sync folder " Grid.Row="4" Grid.Column="0" 
+                 Visibility="{Binding ConfiguringApp}" Height="30" VerticalAlignment="Top"/>
+        <TextBox Grid.Row="4" Grid.Column="1" Margin="2 2 2 2" IsEnabled="False" 
+                 Visibility="{Binding ConfiguringApp}"
+                 Text="{Binding SyncFolderLocation, Mode=OneWay}"/>
+        <Button Content="..." Grid.Row="4" Grid.Column="2" Margin="10 5 10 5"
+                 Visibility="{Binding ConfiguringApp}"
+                 Command="{Binding BrowseSyncFolderCommand}"/>
+
+        <Label Content="Logger folder: " Grid.Row="5" Grid.Column="0"
+                 Visibility="{Binding ConfiguringApp}"/>
+        <TextBox Grid.Row="5" Grid.Column="1" Margin="2 2 2 2" IsEnabled="False"
+                 Visibility="{Binding ConfiguringApp}"
+                 Text="{Binding LoggerFolderLocation, Mode=OneWay}"/>
+        <Button Content="..." Grid.Row="5" Grid.Column="2" Margin="10 5 10 5"
+                Visibility="{Binding ConfiguringApp}"
+                 Command="{Binding BrowseLoggingFolderCommand}"/>
+
+        <StackPanel Grid.Row="6" Grid.Column="1" Orientation="Horizontal" HorizontalAlignment="Center">
+            <Button Margin="5 2 5 2" Width="75" Content="OK" Command="{Binding LoginCommand}"  IsEnabled="{Binding BoxesEnabled}"/>
+            <Button Margin="5 2 2 2" Width="75" Content="Cancel" Command="{Binding CancelCommand}" IsEnabled="{Binding BoxesEnabled}"/>
+        </StackPanel>
     </Grid>
 
 </UserControl>

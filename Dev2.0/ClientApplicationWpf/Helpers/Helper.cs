@@ -13,6 +13,10 @@ namespace ClientApplicationWpf
             HostIp = ConfigurationManager.AppSettings["HostIp"];
             HostPort = int.Parse(ConfigurationManager.AppSettings["HostPort"]);
 
+            _userName = ConfigurationManager.AppSettings["UserName"];
+            _userPassword = ConfigurationManager.AppSettings["UserPassword"];
+            _rememberUserDetails = bool.Parse(ConfigurationManager.AppSettings["RememberUserDetails"]);
+
             ValidateLoggingLocation();
             ValidateSyncLocation();
 
@@ -24,14 +28,70 @@ namespace ClientApplicationWpf
         public static string HostIp { get; private set; }
         public static int HostPort { get; private set; }
 
+        private static string _userName;
+        public static string UserName
+        {
+            get { return _userName; }
+            set
+            {
+                _userName = value;
+                    
+                if (ConfigurationManager.AppSettings["UserName"] != value)
+                {
+                    var config = ConfigurationManager.OpenExeConfiguration(ConfigurationUserLevel.None);
+
+                    config.AppSettings.Settings["UserName"].Value = value;
+                    config.Save(ConfigurationSaveMode.Full, true);
+                    ConfigurationManager.RefreshSection("appSettings");
+                }
+            }
+        }
+
+        private static string _userPassword;
+        public static string UserPassword
+        {
+            get { return _userPassword; }
+            set
+            {
+                _userPassword = value;
+
+                if (ConfigurationManager.AppSettings["UserPassword"] != value)
+                {
+                    var config = ConfigurationManager.OpenExeConfiguration(ConfigurationUserLevel.None);
+
+                    config.AppSettings.Settings["UserPassword"].Value = value;
+                    config.Save(ConfigurationSaveMode.Full, true);
+                    ConfigurationManager.RefreshSection("appSettings");
+                }
+            }
+        }
+
+        private static bool _rememberUserDetails;
+        public static bool RememberUserDetails
+        {
+            get { return _rememberUserDetails; }
+            set
+            {
+                _rememberUserDetails = value;
+
+                if (bool.Parse(ConfigurationManager.AppSettings["RememberUserDetails"]) != value)
+                {
+                    var config = ConfigurationManager.OpenExeConfiguration(ConfigurationUserLevel.None);
+
+                    config.AppSettings.Settings["RememberUserDetails"].Value = value.ToString();
+                    config.Save(ConfigurationSaveMode.Full, true);
+                    ConfigurationManager.RefreshSection("appSettings");
+                }
+            }
+        }
+
         private static string _syncLocation;
         public static string SyncLocation
         {
             get { return _syncLocation; }
             set
             {
-                if (_syncLocation != value)
-                    _syncLocation = value;
+                _syncLocation = value;
 
                 if (ConfigurationManager.AppSettings["SyncLocation"] != value)
                 {
@@ -44,15 +104,13 @@ namespace ClientApplicationWpf
             }
         }
 
-
         private static string _loggerLocation;
         public static string LoggerLocation
         {
             get { return _loggerLocation; }
             set
             {
-                if (_loggerLocation != value)
-                    _loggerLocation = value;
+                _loggerLocation = value;
 
                 if (ConfigurationManager.AppSettings["LoggingLocation"] != value)
                 {
@@ -82,6 +140,7 @@ namespace ClientApplicationWpf
 
         #endregion ConfigKeys
 
+        #region PublicMethods
         public static string GetRelativePath(string path)
         {
             var relativePath = path.Remove(0, SyncLocation.Length).Replace('\\', '/');
@@ -190,7 +249,14 @@ namespace ClientApplicationWpf
             return false;
         }
 
+        public static bool WasFileMoved(string oldPath, string newPath)
+        {
+            var oldPathSlashOcurrence = oldPath.Split('/').Length - 1;
+            var newPathSlashOcurrence = newPath.Split('/').Length - 1;
 
+            return oldPathSlashOcurrence != newPathSlashOcurrence;
+        }
+        #endregion PublicMethods
 
         #region PrivateMethods
         private static void ValidateLoggingLocation()

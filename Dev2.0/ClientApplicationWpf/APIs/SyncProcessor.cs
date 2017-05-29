@@ -23,7 +23,9 @@ namespace ClientApplicationWpf.APIs
 
         public void Dispose()
         {
-            _commandHandler = null;
+            if (_commandHandler != null)
+                _commandHandler.Dispose();
+
             _changedFilesList = null;
         }
 
@@ -31,6 +33,11 @@ namespace ClientApplicationWpf.APIs
         {
             _changedFilesList.Add(customFileHash);
         }
+
+        //public bool InProcessingList(string relativePath, FileChangeTypes changeType)
+        //{
+        //    return _changedFilesList.Any(f => f.RelativePath.Equals(relativePath) && f.ChangeType == changeType);
+        //}
 
         public bool InProcessingList(string relativePath)
         {

@@ -8,6 +8,9 @@ namespace ClientApplicationWpf.ViewModel
     {
         public ViewModelLocator()
         {
+            //var type = typeof(Helper);
+            //System.Runtime.CompilerServices.RuntimeHelpers.RunClassConstructor(type.TypeHandle);
+
             ServiceLocator.SetLocatorProvider(() => SimpleIoc.Default);
 
             SimpleIoc.Default.Register<MainViewModel>();

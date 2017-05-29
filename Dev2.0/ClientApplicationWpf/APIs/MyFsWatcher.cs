@@ -30,7 +30,9 @@ namespace ClientApplicationWpf.APIs
         {
             _fileWatcher.Dispose();
             _fileWatcher = null;
-            _syncProcessor = null;
+
+            if (_syncProcessor != null)
+                _syncProcessor.Dispose();
         }
 
         private void OnChanged(object source, FileSystemEventArgs e)
@@ -66,9 +68,9 @@ namespace ClientApplicationWpf.APIs
         {
             var relativePath = Helper.GetRelativePath(fullPath);
 
-            if (fileChangeType == FileChangeTypes.DeletedOnClient || (!Helper.IsFileLocked(fullPath)
-                && !_syncProcessor.InProcessingList(relativePath)
-                && !Path.GetExtension(fullPath).ToLower().Equals(".tmp")))
+            if (fileChangeType == FileChangeTypes.DeletedOnClient 
+                || 
+                (!Helper.IsFileLocked(fullPath) && !_syncProcessor.InProcessingList(relativePath) && !Path.GetExtension(fullPath).ToLower().Equals(".tmp")))
             {
                 var fileHash = new CustomFileHash(fileChangeType, fullPath, oldFullPath);
                 _syncProcessor.AddChangedFile(fileHash);

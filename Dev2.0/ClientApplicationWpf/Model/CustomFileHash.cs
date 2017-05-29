@@ -6,7 +6,7 @@ using System.Threading;
 
 namespace ClientApplicationWpf.Model
 {
-    public class CustomFileHash
+    public class CustomFileHash : IDisposable
     {
         #region Properties
         public FileChangeTypes ChangeType { get; private set; }
@@ -128,6 +128,14 @@ namespace ClientApplicationWpf.Model
                 Helper.ValidateDirectoryForFile(RelativePath);
                 FileStream = File.Open(FullLocalPath, FileMode.OpenOrCreate, FileAccess.ReadWrite, FileShare.None);
             }
+        }
+
+        public void Dispose()
+        {
+            if (FileStream != null)
+                FileStream.Dispose();
+
+            FileInfo = null;
         }
         #endregion Constructors
 

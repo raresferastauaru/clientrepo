@@ -52,8 +52,8 @@ Dev/ClientApplication/obj/*
 Dev/packages/*
 
 # Custom DEV 2.0 ignores (WPF project)
-Dev2.0/ClientApplication/bin/*
-Dev2.0/ClientApplication/obj/*
+Dev2.0/ClientApplicationWpf/bin/*
+Dev2.0/ClientApplicationWpf/obj/*
 Dev2.0/packages/*
 
 # Other ignores
