@@ -81,27 +81,24 @@ namespace ClientApplicationWpf.Helpers
                         }
                         else
                         {
-                            //Determine if the file was moved. (OnClient) -----> Maybe you should do the same OnServer?
-                            //var fileWasMoved = Helper.WasFileMoved(localFileHash.RelativePath, serverFileHash.RelativePath);
-
-                            //if (!fileWasMoved)
-                            //{
+                            if (!serverFileHash.IsDeleted)
+                            {
                                 message = string.Format("{0}. RENAME: {1} to {2} (New name on CLIENT)", contor++,
                                   serverFileHash.RelativePath, localFileHash.RelativePath);
 
                                 initialSyncFiles.Add(new CustomFileHash(FileChangeTypes.RenamedOnClient,
                                     localFileHash.RelativePath, serverFileHash.RelativePath,
                                     serverFileHash.HashCode, serverFileHash.OldHashCode));
-                            //}
-                            //else
-                            //{
-                            //    message = string.Format("{0}. UP TO DATE: {1}! --- {2}", contor++, localFileHash.RelativePath,
-                            //        localFileHash.GetFileHashBasicDetails());
-                            //}
+                            }
+                            else
+                            {
+                                message = string.Format("{0}. DELETED ON SERVER: {1}! --- {2}", contor++,
+                                    localFileHash.RelativePath, localFileHash.GetFileHashBasicDetails());
+
+                                // add a deleted on server change... just to make sure that the file is deleted on client too ?
+                            }
 
                             blackList.Add(localFileHash);
-                            /// WHAT HASHCODES SHOULD WE SEND ?!?!serverFileHash
-                            /// how is the Changed & Renamed file handled ?!?!?!
                         }
                     }
                     else
