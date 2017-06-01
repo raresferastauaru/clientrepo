@@ -40,7 +40,7 @@ namespace ClientApplicationWpf.Helpers
                         }
                         else
                         {
-                            message = string.Format("{0}. UP TO DATE: {1}! --- {2}", contor++, localFileHash.RelativePath,
+                            message = string.Format("{0}. UP TO DATE: {1} (Hash: {2}).", contor++, localFileHash.RelativePath,
                                 localFileHash.GetFileHashBasicDetails());
                         }
                     }
@@ -49,7 +49,7 @@ namespace ClientApplicationWpf.Helpers
                     {
                         if (localFileHash.HashCode == serverFileHash.OldHashCode)
                         {
-                            message = string.Format("{0}. GET: {1} ({2}) (Update on SERVER)", contor++,
+                            message = string.Format("{0}. GET: {1} (Hash: {2}) --> Update on SERVER.", contor++,
                                 serverFileHash.RelativePath, serverFileHash.HashCode);
 
                             initialSyncFiles.Add(new CustomFileHash(FileChangeTypes.ChangedOnServer,
@@ -58,7 +58,7 @@ namespace ClientApplicationWpf.Helpers
                         }
                         else
                         {
-                            message = string.Format("{0}. PUT: {1} ({2}) (Update on CLIENT)", contor++,
+                            message = string.Format("{0}. PUT: {1} (Hash: {2}) --> Update on CLIENT.", contor++,
                                 serverFileHash.RelativePath, serverFileHash.HashCode);
 
                             initialSyncFiles.Add(new CustomFileHash(FileChangeTypes.ChangedOnClient,
@@ -71,7 +71,7 @@ namespace ClientApplicationWpf.Helpers
                     {
                         if (localFileHash.RelativePath == serverFileHash.OldRelativePath)
                         {
-                            message = string.Format("{0}. RENAME: {1} to {2} (New name on SERVER)", contor++,
+                            message = string.Format("{0}. RENAME: {1} to {2} --> New name on SERVER.", contor++,
                                 serverFileHash.OldRelativePath, serverFileHash.RelativePath);
 
                             initialSyncFiles.Add(new CustomFileHash(FileChangeTypes.RenamedOnServer,
@@ -83,7 +83,7 @@ namespace ClientApplicationWpf.Helpers
                         {
                             if (!serverFileHash.IsDeleted)
                             {
-                                message = string.Format("{0}. RENAME: {1} to {2} (New name on CLIENT)", contor++,
+                                message = string.Format("{0}. RENAME: {1} to {2} --> New name on CLIENT.", contor++,
                                   serverFileHash.RelativePath, localFileHash.RelativePath);
 
                                 initialSyncFiles.Add(new CustomFileHash(FileChangeTypes.RenamedOnClient,
@@ -92,8 +92,8 @@ namespace ClientApplicationWpf.Helpers
                             }
                             else
                             {
-                                message = string.Format("{0}. DELETED ON SERVER: {1}! --- {2}", contor++,
-                                    localFileHash.RelativePath, localFileHash.GetFileHashBasicDetails());
+                                message = string.Format("{0}. UP TO DATE: {1} (Hash: {2}) --> Already DELETED on server.", contor++,
+                                    serverFileHash.RelativePath, serverFileHash.GetFileHashBasicDetails());
 
                                 // add a deleted on server change... just to make sure that the file is deleted on client too ?
                             }
@@ -101,18 +101,36 @@ namespace ClientApplicationWpf.Helpers
                             blackList.Add(localFileHash);
                         }
                     }
+                    else if (serverFileHash.RelativePath != localFileHash.RelativePath &&
+                             serverFileHash.HashCode != localFileHash.HashCode)
+                    {
+                        if(serverFileHash.OldHashCode == localFileHash.HashCode && 
+                            serverFileHash.IsDeleted)
+                        {
+                            message = string.Format("{0}. UP TO DATE: {1} (Hash: {2}) --> Already DELETED on server.", contor++,
+                                    serverFileHash.RelativePath, serverFileHash.GetFileHashBasicDetails());
+
+                            blackList.Add(localFileHash);
+                        }
+                        else
+                        {
+                            message = string.Format("{0}. UNDEFINED: InitialSyncProcessor. Please investigate it!\nServerFileHash: {1}\nClientFileHash: {2}\n.",
+                                contor++,
+                                serverFileHash, localFileHash);
+                        }
+                    }
                     else
                     {
                         message = string.Format("{0}. UNDEFINED: InitialSyncProcessor. Please investigate it!\nServerFileHash: {1}\nClientFileHash: {2}\n.",
                                 contor++,
-                                serverFileHash, clientFileHashes);
+                                serverFileHash, localFileHash);
                     }
                 }
                 else
                 {
                     if (!serverFileHash.IsDeleted)
                     {
-                        message = string.Format("{0}. GET: {1} ({2}) (New file on SERVER).", ++contor,
+                        message = string.Format("{0}. GET: {1} (Hash: {2}) --> New file on SERVER.", ++contor,
                             serverFileHash.RelativePath, serverFileHash.HashCode);
 
                         initialSyncFiles.Add(new CustomFileHash(FileChangeTypes.ChangedOnServer,
@@ -121,9 +139,8 @@ namespace ClientApplicationWpf.Helpers
                     }
                     else
                     {
-                        message = string.Format("{0}. UP TO DATE: {1}! --- {2} --- Already DELETED on server.", contor++,
-                            serverFileHash.RelativePath,
-                            serverFileHash.GetFileHashBasicDetails());
+                        message = string.Format("{0}. UP TO DATE: {1} (Hash: {2}) --> Already DELETED on server.", contor++,
+                            serverFileHash.RelativePath, serverFileHash.GetFileHashBasicDetails());
 
                         if (File.Exists(Helper.GetLocalPath(serverFileHash.RelativePath)))
                         {
@@ -149,7 +166,7 @@ namespace ClientApplicationWpf.Helpers
 
             foreach (var clientFileHash in clientFileHashes)
             {
-                var str = string.Format("{0}. PUT: {1}({2}) (New file on CLIENT).", ++contor, clientFileHash.RelativePath, clientFileHash.HashCode);
+                var str = string.Format("{0}. PUT: {1}(Hash: {2}) --> New file on CLIENT.", ++contor, clientFileHash.RelativePath, clientFileHash.HashCode);
                 Logger.WriteLine(str);
 
                 initialSyncFiles.Add(new CustomFileHash(FileChangeTypes.ChangedOnClient,

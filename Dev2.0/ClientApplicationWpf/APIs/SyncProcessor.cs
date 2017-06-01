@@ -187,7 +187,7 @@ namespace ClientApplicationWpf.APIs
                     string exMessage;
                     if (fileHash != null)
                     {
-                        exMessage = string.Format("\n!!! EXCEPTION on SyncProcessor:\n\tFileHash:\n{0}\n\tMessage: {1}\n\n\tType: {2}\n\n\tSource: {3}\n\n\tStackTrace:\n {4}\n",
+                        exMessage = string.Format("SyncProcessor exception:\n\tFileHash:\n{0}\n\tMessage: {1}\n\n\tType: {2}\n\n\tSource: {3}\n\n\tStackTrace:\n {4}\n",
                             fileHash,
                             ex.Message,
                             ex.GetType(),

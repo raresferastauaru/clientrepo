@@ -265,7 +265,7 @@ namespace ClientApplicationWpf.ViewModel
                 var changedFilesList = new ThreadSafeList<CustomFileHash>();
                 var commandResponseBuffer = new BufferBlock<byte[]>();
 
-                var tcpClient = new TcpClient(Helper.HostIp, Helper.HostPort);
+                var tcpClient = EstablishTcpCommunication();
                 _tcpCommunication = new TcpCommunication(tcpClient, commandResponseBuffer, changedFilesList);
 
 
@@ -333,6 +333,25 @@ namespace ClientApplicationWpf.ViewModel
                           "\nStackTrace: " + ex.StackTrace;
                 MessageBox.Show(str, @"Synchroniser - Exception");
             }
+        }
+
+        private TcpClient EstablishTcpCommunication()
+        {
+            var tcpClient = new TcpClient(Helper.HostIp, Helper.HostPort);
+            var networkStream = tcpClient.GetStream();
+            var userInfos = Encoding.UTF8.GetBytes(ConnectedUserName);
+
+            networkStream.Write(userInfos, 0, userInfos.Count());
+
+            var nodeDetais = new byte[256];
+            var readBytes= networkStream.Read(nodeDetais, 0, 256);
+            nodeDetais = nodeDetais.Take(readBytes).ToArray();
+
+            var infos = Encoding.UTF8.GetString(nodeDetais).Split(':').ToList();
+
+            networkStream.Close();
+            tcpClient.Close();
+            return new TcpClient(infos[0], int.Parse(infos[1]));
         }
 
         private void ManageUserLogout()
