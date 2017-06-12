@@ -31,8 +31,7 @@ namespace ClientApplicationWpf.Helpers
                     {
                         if (serverFileHash.IsDeleted)
                         {
-                            message = string.Format("{0}. DELETED ON SERVER: {1}! --- {2}", contor++, localFileHash.RelativePath,
-                                localFileHash.GetFileHashBasicDetails());
+                            message = string.Format("{0}. Actualizat: {1}. (Deja șters pe Server)", contor++, localFileHash.RelativePath);
 
                             initialSyncFiles.Add(new CustomFileHash(FileChangeTypes.DeletedOnServer,
                                 serverFileHash.RelativePath, serverFileHash.OldRelativePath,
@@ -40,8 +39,7 @@ namespace ClientApplicationWpf.Helpers
                         }
                         else
                         {
-                            message = string.Format("{0}. UP TO DATE: {1} (Hash: {2}).", contor++, localFileHash.RelativePath,
-                                localFileHash.GetFileHashBasicDetails());
+                            message = string.Format("{0}. Actualizat: {1}.", contor++, localFileHash.RelativePath);
                         }
                     }
                     else if (serverFileHash.RelativePath == localFileHash.RelativePath &&
@@ -49,8 +47,7 @@ namespace ClientApplicationWpf.Helpers
                     {
                         if (localFileHash.HashCode == serverFileHash.OldHashCode)
                         {
-                            message = string.Format("{0}. GET: {1} (Hash: {2}) --> Update on SERVER.", contor++,
-                                serverFileHash.RelativePath, serverFileHash.HashCode);
+                            message = string.Format("{0}. Obține: {1}. (Actualizare pe Server)", contor++, serverFileHash.RelativePath);
 
                             initialSyncFiles.Add(new CustomFileHash(FileChangeTypes.ChangedOnServer,
                                 serverFileHash.RelativePath, serverFileHash.OldRelativePath,
@@ -58,8 +55,7 @@ namespace ClientApplicationWpf.Helpers
                         }
                         else
                         {
-                            message = string.Format("{0}. PUT: {1} (Hash: {2}) --> Update on CLIENT.", contor++,
-                                serverFileHash.RelativePath, serverFileHash.HashCode);
+                            message = string.Format("{0}. Pune: {1}. (Actualizare pe Client)", contor++, serverFileHash.RelativePath);
 
                             initialSyncFiles.Add(new CustomFileHash(FileChangeTypes.ChangedOnClient,
                                 localFileHash.RelativePath, localFileHash.OldRelativePath,
@@ -71,7 +67,7 @@ namespace ClientApplicationWpf.Helpers
                     {
                         if (localFileHash.RelativePath == serverFileHash.OldRelativePath)
                         {
-                            message = string.Format("{0}. RENAME: {1} to {2} --> New name on SERVER.", contor++,
+                            message = string.Format("{0}. Redenumește: {1} la {2}. (Nume nou pe Server)", contor++,
                                 serverFileHash.OldRelativePath, serverFileHash.RelativePath);
 
                             initialSyncFiles.Add(new CustomFileHash(FileChangeTypes.RenamedOnServer,
@@ -83,18 +79,16 @@ namespace ClientApplicationWpf.Helpers
                         {
                             if (!serverFileHash.IsDeleted)
                             {
-                                message = string.Format("{0}. RENAME: {1} to {2} --> New name on CLIENT.", contor++,
-                                  serverFileHash.RelativePath, localFileHash.RelativePath);
+                                message = string.Format("{0}. Redenumește: {1} la {2}. (Nume nou pe Client)", contor++,
+									serverFileHash.RelativePath, localFileHash.RelativePath);
 
                                 initialSyncFiles.Add(new CustomFileHash(FileChangeTypes.RenamedOnClient,
                                     localFileHash.RelativePath, serverFileHash.RelativePath,
                                     serverFileHash.HashCode, serverFileHash.OldHashCode));
                             }
                             else
-                            {
-                                message = string.Format("{0}. UP TO DATE: {1} (Hash: {2}) --> Already DELETED on server.", contor++,
-                                    serverFileHash.RelativePath, serverFileHash.GetFileHashBasicDetails());
-
+							{
+								message = string.Format("{0}. Actualizat: {1}. (Deja șters pe Server)", contor++, serverFileHash.RelativePath);
                                 // add a deleted on server change... just to make sure that the file is deleted on client too ?
                             }
 
@@ -106,9 +100,8 @@ namespace ClientApplicationWpf.Helpers
                     {
                         if(serverFileHash.OldHashCode == localFileHash.HashCode && 
                             serverFileHash.IsDeleted)
-                        {
-                            message = string.Format("{0}. UP TO DATE: {1} (Hash: {2}) --> Already DELETED on server.", contor++,
-                                    serverFileHash.RelativePath, serverFileHash.GetFileHashBasicDetails());
+						{
+							message = string.Format("{0}. Actualizat: {1}. (Deja șters pe Server)", contor++, serverFileHash.RelativePath);
 
                             blackList.Add(localFileHash);
                         }
@@ -117,21 +110,22 @@ namespace ClientApplicationWpf.Helpers
                             message = string.Format("{0}. UNDEFINED: InitialSyncProcessor. Please investigate it!\nServerFileHash: {1}\nClientFileHash: {2}\n.",
                                 contor++,
                                 serverFileHash, localFileHash);
-                        }
+							blackList.Add(localFileHash);
+						}
                     }
                     else
                     {
                         message = string.Format("{0}. UNDEFINED: InitialSyncProcessor. Please investigate it!\nServerFileHash: {1}\nClientFileHash: {2}\n.",
                                 contor++,
                                 serverFileHash, localFileHash);
+                        blackList.Add(localFileHash);
                     }
                 }
                 else
                 {
                     if (!serverFileHash.IsDeleted)
                     {
-                        message = string.Format("{0}. GET: {1} (Hash: {2}) --> New file on SERVER.", ++contor,
-                            serverFileHash.RelativePath, serverFileHash.HashCode);
+                        message = string.Format("{0}. Obține: {1}. (Fișier nou pe Server)", ++contor, serverFileHash.RelativePath);
 
                         initialSyncFiles.Add(new CustomFileHash(FileChangeTypes.ChangedOnServer,
                             serverFileHash.RelativePath, serverFileHash.OldRelativePath,
@@ -139,13 +133,14 @@ namespace ClientApplicationWpf.Helpers
                     }
                     else
                     {
-                        message = string.Format("{0}. UP TO DATE: {1} (Hash: {2}) --> Already DELETED on server.", contor++,
+						message = string.Format("{0}. Actualizat: {1}. (Deja șters pe Server)", contor++,
                             serverFileHash.RelativePath, serverFileHash.GetFileHashBasicDetails());
 
                         if (File.Exists(Helper.GetLocalPath(serverFileHash.RelativePath)))
                         {
                             File.Delete(Helper.GetLocalPath(serverFileHash.RelativePath));
-                            message += " DELETED on client too.";
+							message.TrimEnd(')');
+                            message += " și pe Client de asemenea)";
                         }
                     }
                 }
@@ -166,8 +161,8 @@ namespace ClientApplicationWpf.Helpers
 
             foreach (var clientFileHash in clientFileHashes)
             {
-                var str = string.Format("{0}. PUT: {1}(Hash: {2}) --> New file on CLIENT.", ++contor, clientFileHash.RelativePath, clientFileHash.HashCode);
-                Logger.WriteLine(str);
+                Logger.WriteLine(string.Format("{0}. Pune: {1}. (Fișier nou pe Client)", 
+					++contor, clientFileHash.RelativePath, clientFileHash.HashCode));
 
                 initialSyncFiles.Add(new CustomFileHash(FileChangeTypes.ChangedOnClient,
                     clientFileHash.RelativePath, clientFileHash.OldRelativePath,

@@ -1,9 +1,7 @@
 ﻿using ClientApplicationWpf.Messages;
 using ClientApplicationWpf.Model;
-using ClientApplicationWpf.ViewModel;
 using GalaSoft.MvvmLight.Messaging;
 using System;
-using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 
@@ -28,7 +26,7 @@ namespace ClientApplicationWpf
         {
             try
             {
-                var msg = String.Format("{0} : {1}\n", DateTime.Now, message);
+                var msg = string.Format("{0} : {1}\n", DateTime.Now, message);
                 File.AppendAllText(Helper.CurrentLoggingFileLocation, msg);
 
                 if (_traceEnabled)

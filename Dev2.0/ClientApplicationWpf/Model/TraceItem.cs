@@ -1,8 +1,6 @@
-﻿using GalaSoft.MvvmLight;
-using System;
-namespace ClientApplicationWpf.ViewModel
+﻿namespace ClientApplicationWpf.Model
 {
-    public class TraceItemViewModel : ViewModelBase
+    public class TraceItem
     {
         private string _text;
 
@@ -14,7 +12,7 @@ namespace ClientApplicationWpf.ViewModel
             }
         }
 
-        public TraceItemViewModel(string text)
+        public TraceItem(string text)
         {
             _text = text;
         }

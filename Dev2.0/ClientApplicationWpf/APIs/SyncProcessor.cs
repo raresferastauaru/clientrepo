@@ -70,26 +70,26 @@ namespace ClientApplicationWpf.APIs
                                     await _commandHandler.Mkdir(fileHash);
                                 else
                                     await _commandHandler.Put(fileHash);
-                                Logger.WriteLine(string.Format("{0}. Succes on dequeue: {1} ==> {2}",
-                                    _dequeuedFilesCounter++, fileHash.RelativePath, fileHash.ChangeType));
+                                Logger.WriteLine(string.Format("{0}. Succes la ștergerea din coadă: {1}. (Trimis pe Server)",
+                                    _dequeuedFilesCounter++, fileHash.RelativePath));
                                 break;
 
                             case FileChangeTypes.ChangedOnClient:
                                 await _commandHandler.Put(fileHash);
-                                Logger.WriteLine(string.Format("{0}. Succes on dequeue: {1} ==> {2}",
-                                    _dequeuedFilesCounter++, fileHash.RelativePath, fileHash.ChangeType));
+                                Logger.WriteLine(string.Format("{0}. Succes la ștergerea din coadă: {1}. (Trimis pe Server)",
+                                    _dequeuedFilesCounter++, fileHash.RelativePath));
                                 break;
 
                             case FileChangeTypes.RenamedOnClient:
                                 await _commandHandler.Rename(fileHash);
-                                Logger.WriteLine(string.Format("{0}. Succes on dequeue: {1} renamed to {2}",
+                                Logger.WriteLine(string.Format("{0}. Succes la ștergerea din coadă: {1} redenumit la {2}. (Redenumit pe Client)",
                                     _dequeuedFilesCounter++, fileHash.OldRelativePath, fileHash.RelativePath));
                                 break;
 
                             case FileChangeTypes.DeletedOnClient:
                                 await _commandHandler.Delete(fileHash);
-                                Logger.WriteLine(string.Format("{0}. Succes on dequeue: {1} ==> {2}",
-                                    _dequeuedFilesCounter++, fileHash.RelativePath, fileHash.ChangeType));
+                                Logger.WriteLine(string.Format("{0}. Succes la ștergerea din coadă: {1}. (Șters pe Server)",
+                                    _dequeuedFilesCounter++, fileHash.RelativePath));
                                 break;
 
 
@@ -98,8 +98,8 @@ namespace ClientApplicationWpf.APIs
                                 //if (Helper.IsDirectory(fileHash.FullLocalPath))
                                 //{
                                 Directory.CreateDirectory(fileHash.FullLocalPath);
-                                Logger.WriteLine(string.Format("{0}. Succes on dequeue: {1} ==> {2}",
-                                    _dequeuedFilesCounter++, fileHash.RelativePath, fileHash.ChangeType));
+                                Logger.WriteLine(string.Format("{0}. Succes la ștergerea din coadă: {1}. (Creat pe Server)",
+                                    _dequeuedFilesCounter++, fileHash.RelativePath));
                                 //}
                                 //else
                                 //{
@@ -111,32 +111,21 @@ namespace ClientApplicationWpf.APIs
                             case FileChangeTypes.ChangedOnServer:
                                 var fileCreated = _commandHandler.Get(fileHash);
                                 if (await fileCreated)
-                                    Logger.WriteLine(string.Format("{0}. Succes on dequeue: {1} ==> {2}",
+                                    Logger.WriteLine(string.Format("{0}. Succes la ștergerea din coadă: {1} (Obține de pe server)",
                                         _dequeuedFilesCounter++, fileHash.RelativePath, fileHash.ChangeType));
                                 else
-                                    Logger.WriteLine(string.Format("{0}. Fail on dequeue: {1} ==> {2}",
-                                        _dequeuedFilesCounter++, fileHash.RelativePath, fileHash.ChangeType));
+                                    Logger.WriteLine(string.Format("{0}. Eșec la ștergerea din coadă: {1}. (Obține  de pe Server)",
+                                        _dequeuedFilesCounter++, fileHash.RelativePath));
                                 break;
 
                             case FileChangeTypes.RenamedOnServer:
                                 if (Helper.IsDirectory(fileHash.OldFullLocalPath))
-                                {
                                     Directory.Move(fileHash.OldFullLocalPath, fileHash.FullLocalPath);
-
-                                    //var tempName = Helper.SyncLocation + "~RenamingFolder~";
-                                    //var dir = new DirectoryInfo(fileHash.OldFullLocalPath);
-                                    //dir.MoveTo(tempName);
-                                    //Thread.Sleep(2000);
-                                    //dir.MoveTo(fileHash.FullLocalPath);
-                                }
                                 else
-                                {
-                                    //fileHash.FileStream.Close();
                                     File.Move(fileHash.OldFullLocalPath, fileHash.FullLocalPath);
-                                }
 
-                                Logger.WriteLine(string.Format("{0}. Succes on dequeue: {1} ==> {2}",
-                                    _dequeuedFilesCounter++, fileHash.RelativePath, fileHash.ChangeType));
+                                Logger.WriteLine(string.Format("{0}. Succes la ștergerea din coadă: {1}. (Redenumit pe Server)",
+                                    _dequeuedFilesCounter++, fileHash.RelativePath));
                                 break;
 
                             case FileChangeTypes.DeletedOnServer:
@@ -145,26 +134,26 @@ namespace ClientApplicationWpf.APIs
                                     if (Directory.Exists(fileHash.FullLocalPath))
                                     {
                                         Directory.Delete(fileHash.FullLocalPath, true);
-                                        Logger.WriteLine(string.Format("{0}. Succes on dequeue: {1} ==> {2}",
+                                        Logger.WriteLine(string.Format("{0}. Succes la ștergerea din coadă: {1} ==> {2}",
                                             _dequeuedFilesCounter++, fileHash.RelativePath, fileHash.ChangeType));
                                     }
                                     else
                                     {
-                                        Logger.WriteLine(string.Format("{0}. Fail on dequeue: {1} ==> {2}\n(Directory " + fileHash.FullLocalPath + "doesn't exist)",
-                                            _dequeuedFilesCounter++, fileHash.RelativePath, fileHash.ChangeType));
+                                        Logger.WriteLine(string.Format("{0}. Eșec la ștergerea din coadă: {1} (Stergere pe Server: Directorul {3} nu există)",
+                                            _dequeuedFilesCounter++, fileHash.RelativePath, fileHash.ChangeType, fileHash.FullLocalPath));
                                     }
                                 }
                                 else if (File.Exists(fileHash.FullLocalPath))
                                 {
                                     fileHash.FileStream.Close();
                                     File.Delete(fileHash.FullLocalPath);
-                                    Logger.WriteLine(string.Format("{0}. Succes on dequeue: {1} ==> {2}",
+                                    Logger.WriteLine(string.Format("{0}. Succes la ștergerea din coadă: {1} ==> {2}",
                                         _dequeuedFilesCounter++, fileHash.RelativePath, fileHash.ChangeType));
                                 }
                                 else
                                 {
-                                    Logger.WriteLine(string.Format("{0}. Fail on dequeue: {1} ==> {2}\n(File " + fileHash.FullLocalPath + "doesn't exist)",
-                                        _dequeuedFilesCounter++, fileHash.RelativePath, fileHash.ChangeType));
+                                    Logger.WriteLine(string.Format("{0}. Eșec la ștergerea din coadă: {1}. (Stergere pe Server: Fișierul {3} nu există)",
+                                        _dequeuedFilesCounter++, fileHash.RelativePath, fileHash.ChangeType, fileHash.FullLocalPath));
                                 }
                                 break;
                         }
@@ -187,12 +176,9 @@ namespace ClientApplicationWpf.APIs
                     string exMessage;
                     if (fileHash != null)
                     {
-                        exMessage = string.Format("SyncProcessor exception:\n\tFileHash:\n{0}\n\tMessage: {1}\n\n\tType: {2}\n\n\tSource: {3}\n\n\tStackTrace:\n {4}\n",
-                            fileHash,
-                            ex.Message,
-                            ex.GetType(),
-                            ex.Source,
-                            ex.StackTrace);
+                        exMessage = string.Format("Excepție la Procesorul de Sincronizare:" +
+							"\n\tFileHash:\n{0}\n\tMessage: {1}\n\n\tType: {2}\n\n\tSource: {3}\n\n\tStackTrace:\n {4}\n",
+                            fileHash, ex.Message, ex.GetType(), ex.Source, ex.StackTrace);
 
                         if (fileHash.FileStream != null)
                             fileHash.FileStream.Dispose();
@@ -200,11 +186,11 @@ namespace ClientApplicationWpf.APIs
                         if (_changedFilesList != null)
                             _changedFilesList.Remove(fileHash);
                         else
-                            exMessage += "\n!!! _changedFilesList was null !!! Why ?";
+                            exMessage += "\n!!! _listăFișiereSchimbate a fost NULL !!! De ce?";
                     }
                     else
                     {
-                        exMessage = "!!! EXCEPTION on SyncProcessor: fileHash was null. HOW ?!?!?!";
+                        exMessage = "Excepție la Procesorul de Sincronizare: înregistrareFișier a fost NULL !!! Cum ?!";
                     }
 
                     Logger.WriteLine(exMessage);

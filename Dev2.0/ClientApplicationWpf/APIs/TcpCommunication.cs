@@ -132,8 +132,7 @@ namespace ClientApplicationWpf.APIs
                             }
                             else
                             {
-                                Logger.WriteLine("~~~AsyncReading: buffer.Length = 0. WHY ?!\n" +
-                                                 "~~~\tCachedData: " + cachedData);
+                                //Logger.WriteLine("~~~AsyncReading: buffer.Length = 0. WHY ?!\n~~~\tCachedData: " + cachedData);
                             }
                         }
                     }
@@ -190,7 +189,7 @@ namespace ClientApplicationWpf.APIs
                 var bytesToEocr = bytesBeforeEocr + 5;
                 if (bytesToEocr < buffer.Count())
                 {
-                    Logger.WriteLine("~~~AsyncReading(EOCR - RemainedData) : " + Encoding.UTF8.GetString(buffer));
+                    //Logger.WriteLine("~~~AsyncReading(EOCR - RemainedData) : " + Encoding.UTF8.GetString(buffer));
                     var dataAfterEocr = buffer.Skip(bytesToEocr).ToArray();
                     CommandResponseBuffer.Post(dataAfterEocr);
                 }
@@ -248,8 +247,8 @@ namespace ClientApplicationWpf.APIs
             }
             else
             {
-                //read from network till EOCR occurs and then get transmited data !!
-                Logger.WriteLine("PushNotification - exception: the message was put in different chunks !! But HOW ?!");
+				//read from network till EOCR occurs and then get transmited data !!
+				Logger.WriteLine("Excepție: PushNotification - mesajul a fost pus in chunk-uri diferite. Caz netratat");
             }
         }
 
@@ -263,29 +262,30 @@ namespace ClientApplicationWpf.APIs
                 switch (command)
                 {
                     case "CHANGED":
-                        message = string.Format("PushNotification: ChangedOnServer - {0}", fileName);
+                        message = string.Format("PushNotification: Schimbat - {0}", fileName);
                         fullLocalPath = Helper.GetLocalPath(fileName);
                         customFileHash = new CustomFileHash(FileChangeTypes.ChangedOnServer, fullLocalPath);
                         break;
                     case "MKDIR":
-                        message = string.Format("PushNotification: MakedNewDirectory - {0}", fileName);
+                        message = string.Format("PushNotification: CreatDirectorNou - {0}", fileName);
                         fullLocalPath = Helper.GetLocalPath(fileName);
                         customFileHash = new CustomFileHash(FileChangeTypes.CreatedOnServer, fullLocalPath);
                         break;
                     case "RENAMED":
                         // oldName to newName
-                        message = string.Format("PushNotification: RenamedOnServer - {0} to {1}", fileName, newFileName);
+                        message = string.Format("PushNotification: Redenumit - {0} to {1}", fileName, newFileName);
                         fullLocalPath = Helper.GetLocalPath(newFileName);
                         var oldFullLocalPath = Helper.GetLocalPath(fileName);
                         customFileHash = new CustomFileHash(FileChangeTypes.RenamedOnServer, fullLocalPath, oldFullLocalPath);
                         break;
                     case "DELETED":
-                        message = string.Format("PushNotification: DeletedOnServer - {0}", fileName);
+                        message = string.Format("PushNotification: Șters - {0}", fileName);
                         fullLocalPath = Helper.GetLocalPath(fileName);
                         customFileHash = new CustomFileHash(FileChangeTypes.DeletedOnServer, fullLocalPath);
                         break;
                     default:
-                        message = string.Format("Received push notification ISSUE:\n\tCommand: {0}\n\tFileName: {1}\n\tNewFileName: {2}", command, fileName, newFileName);
+                        message = string.Format("Problemă la PushNotification recepționat: \n\tComandă: {0}\n\tNumeFișier: {1}\n\tNumeNouFișier: {2}", 
+							command, fileName, newFileName);
                         break;
                 }
                 if (customFileHash != null)

@@ -27,8 +27,8 @@ namespace ClientApplicationWpf.ViewModel
         #endregion PrivateProperties
 
         #region PublicProperties
-        private ObservableCollection<TraceItemViewModel> _traceItems;
-        public ObservableCollection<TraceItemViewModel> TraceItems
+        private ObservableCollection<TraceItem> _traceItems;
+        public ObservableCollection<TraceItem> TraceItems
         {
             get
             {
@@ -227,7 +227,7 @@ namespace ClientApplicationWpf.ViewModel
             LogoutCommand = new RelayCommand(DoLogout);
             PlayPauseCommand = new RelayCommand(DoPlayPause);
 
-            _traceItems = new ObservableCollection<TraceItemViewModel>();
+            _traceItems = new ObservableCollection<TraceItem>();
 
             RegisterMesseges();
         }
@@ -238,7 +238,7 @@ namespace ClientApplicationWpf.ViewModel
             {
                 ManageUserLogin();
             });
-
+	
             Messenger.Default.Register<LoginCancelingMsg>(this, msg =>
             {
                 var result = MessageBox.Show("Are you sure you want to close this application ?", "Confirmation", MessageBoxButton.YesNo, MessageBoxImage.Question);
@@ -251,9 +251,16 @@ namespace ClientApplicationWpf.ViewModel
             {
                 //TraceItems.Insert(0, msg.TraceItem);
 
-                Action<TraceItemViewModel> addMethod = TraceItems.Add;
-                Application.Current.Dispatcher.BeginInvoke(addMethod, msg.TraceItem);
+                Action<TraceItem> addMethod = TraceItems.Add;
 
+                try
+                {
+                    Application.Current.Dispatcher.BeginInvoke(addMethod, msg.TraceItem);
+                }
+                catch(NullReferenceException ex)
+                {
+                    
+                }
                 RaisePropertyChanged(() => TraceItems);
             });
         }

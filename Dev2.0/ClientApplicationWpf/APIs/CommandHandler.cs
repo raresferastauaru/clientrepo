@@ -92,8 +92,7 @@ namespace ClientApplicationWpf.APIs
                 customFileHash.FileStream.Dispose();
             }
 
-            //if (!Context.InAutoMode) throw new Exception(messageParts[1]);
-            Logger.WriteLine("Error message in GET Command: " + messageParts[1]);
+            Logger.WriteLine("Mesaj din comanda Obtine: " + messageParts[1]);
             return false;
         }
 
@@ -130,7 +129,6 @@ namespace ClientApplicationWpf.APIs
                 if (messageParts[0].Equals("ACKNOWLEDGE"))
                 {
                     // Sending the FileHashDetails for the transmited data
-                    Logger.WriteLine(customFileHash.GetFileHashDetails());
                     var fileHashDetails = Encoding.UTF8.GetBytes(customFileHash.GetFileHashDetails());
                     _tcpCommunication.SendCommand(fileHashDetails, 0, fileHashDetails.Length);
 
@@ -140,7 +138,6 @@ namespace ClientApplicationWpf.APIs
                     messageParts = Encoding.UTF8.GetString(readMessage).Split(':');
                     if (messageParts[0].Equals("ACKNOWLEDGE"))
                     {
-                        Logger.WriteLine("The FileHash of \"" + customFileHash.RelativePath + "\" was sent successfully.");
                         return true;
                     }
                     else
@@ -159,8 +156,7 @@ namespace ClientApplicationWpf.APIs
             }
 
             customFileHash.FileStream.Dispose();
-            //if (!Context.InAutoMode) throw new Exception(message);
-            Logger.WriteLine("Error message in PUT Command: " + message);
+            Logger.WriteLine("Mesaj din comanda Pune: " + message);
             return false;
         }
 
@@ -200,8 +196,7 @@ namespace ClientApplicationWpf.APIs
             if (customFileHash.FileStream != null)
                 customFileHash.FileStream.Dispose();
 
-            //if (!Context.InAutoMode) throw new Exception(message);
-            Logger.WriteLine("Error message in RENAME Command: " + message);
+            Logger.WriteLine("Mesaj din comanda Redenumeste: " + message);
             return false;
         }
 
@@ -220,8 +215,7 @@ namespace ClientApplicationWpf.APIs
             if (messageParts[0].Equals("ACKNOWLEDGE"))
                 return true;
 
-            //if (!Context.InAutoMode) throw new Exception(messageParts[1]);
-            Logger.WriteLine("Error message in DELETE Command: " + messageParts[1]);
+            Logger.WriteLine("Mesaj din comanda Șterge: " + messageParts[1]);
             return false;
         }
 
@@ -238,8 +232,7 @@ namespace ClientApplicationWpf.APIs
             if (messageParts[0].Equals("ACKNOWLEDGE"))
                 return true;
 
-            //if (!Context.InAutoMode) throw new Exception(messageParts[1]);
-            Logger.WriteLine("Error message in MKDIR Command: " + messageParts[1]);
+            Logger.WriteLine("Mesaj din comanda CrDirector: " + messageParts[1]);
             return false;
         }
 
@@ -280,7 +273,7 @@ namespace ClientApplicationWpf.APIs
             }
             else
             {
-                Logger.WriteLine(receivedData.Split(':')[1]);
+                Logger.WriteLine("Mesaj din comanda ObțineÎnregistrăriFișiere: " + receivedData.Split(':')[1]);
             }
 
             return serverFileHashes;

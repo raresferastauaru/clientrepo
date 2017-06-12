@@ -8,7 +8,7 @@
         xmlns:fa="http://schemas.fontawesome.io/icons/"
         xmlns:behaviors="clr-namespace:ClientApplicationWpf.Behaviors"
         mc:Ignorable="d"
-        Title="File Synchroniser" 
+        Title="Sincronizator de fișiere" 
         Height="450" Width="650" MinHeight="400" MinWidth="600"
         WindowStartupLocation="CenterScreen"
         RenderOptions.BitmapScalingMode="Fant"
@@ -56,10 +56,10 @@
                     <ControlTemplate TargetType="{x:Type ToggleButton}">
                         <StackPanel Orientation="Horizontal">
                             <Border x:Name="on" Width="35" Height="25" Background="LightGray" CornerRadius="4,0,0,4">
-                                <TextBlock x:Name="onText" Text="Sync" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                <TextBlock x:Name="onText" Text="Start" HorizontalAlignment="Center" VerticalAlignment="Center"/>
                             </Border>
                             <Border x:Name="off" Width="35" Height="25" Background="LightBlue" CornerRadius="0,4,4,0">
-                                <TextBlock x:Name="offText" Text="Pause" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                <TextBlock x:Name="offText" Text="Pauză" HorizontalAlignment="Center" VerticalAlignment="Center"/>
                             </Border>
                         </StackPanel>
                         <ControlTemplate.Triggers>
@@ -105,7 +105,7 @@
             <StackPanel Grid.Row="0" Grid.Column="0" Orientation="Horizontal" VerticalAlignment="Top" HorizontalAlignment="Right" 
                         Visibility="{Binding UserDetailsVisibility}">
                 
-                <Label Content="User: "/>
+                <Label Content="Utilizator: "/>
                 <Label Content="{Binding ConnectedUserName}" />
 
                 <GridSplitter Width="3" HorizontalAlignment="Stretch" Margin="10 5 10 5" IsEnabled="False"/>
@@ -118,7 +118,7 @@
                     <Button.Template>
                         <ControlTemplate>
                             <Border CornerRadius="4 4 4 4" Background="LightBlue">
-                                <TextBlock Text="Logout" Foreground="White" HorizontalAlignment="Center" VerticalAlignment="Center" Padding="2"/>
+                                <TextBlock Text="Deconectare" Foreground="White" HorizontalAlignment="Center" VerticalAlignment="Center" Padding="2"/>
                             </Border>
                         </ControlTemplate>
                     </Button.Template>

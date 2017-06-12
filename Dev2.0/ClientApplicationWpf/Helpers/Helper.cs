@@ -234,7 +234,7 @@ namespace ClientApplicationWpf
                 }
                 catch (IOException ex)
                 {
-                    var msg = string.Format("Helper (ChangeFileAttributes - {0}): \n\tRetry number: {1} of {2}\n\tMessage: {3}\n\tStackTrace: {4}",
+                    var msg = string.Format("Ajutor: SchimbăAtributeleFișierului - {0}: \n\tNumărul reîncercării: {1} of {2}\n\tMesaj: {3}\n\tStackTrace: {4}",
                         fullPath, i, numberOfRetries, ex.Message, ex.StackTrace);
                     Logger.WriteLine(msg);
 
@@ -245,7 +245,7 @@ namespace ClientApplicationWpf
                 }
             }
 
-            Logger.WriteLine("Helper - ChangeFileAttributes - WHY DID IT GOT HERE ?!");
+            Logger.WriteLine("Ajutor: SchimbăAtributeleFișierului - comportament neașteptat");
             return false;
         }
 
