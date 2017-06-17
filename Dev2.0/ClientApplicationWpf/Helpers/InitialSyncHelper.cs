@@ -146,7 +146,9 @@ namespace ClientApplicationWpf.Helpers
                 }
 
                 blackList.Add(serverFileHash);
-                Logger.WriteLine(message);
+
+				if(!message.Contains("(Deja șters pe Server)"))
+					Logger.WriteLine(message);
             }
 
             foreach (var sfh in blackList)

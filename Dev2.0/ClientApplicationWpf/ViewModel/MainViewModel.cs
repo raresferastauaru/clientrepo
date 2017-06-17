@@ -1,4 +1,4 @@
-using GalaSoft.MvvmLight;
+﻿using GalaSoft.MvvmLight;
 using System.Windows;
 using ClientApplicationWpf.Messages;
 using GalaSoft.MvvmLight.Messaging;
@@ -16,6 +16,8 @@ using System.Linq;
 using System.Collections.ObjectModel;
 using GalaSoft.MvvmLight.Command;
 using System.Threading;
+using System.Net;
+using System.Net.NetworkInformation;
 
 namespace ClientApplicationWpf.ViewModel
 {
@@ -191,7 +193,7 @@ namespace ClientApplicationWpf.ViewModel
 
         private void DoLogout()
         {
-            var result = MessageBox.Show("Are you sure you want to close logout from the application ?", "Confirmation", MessageBoxButton.YesNo, MessageBoxImage.Question);
+            var result = MessageBox.Show("Sunteți sigur/ă ca doriți să vă deconectați de la aplicație ?", "Confirmare", MessageBoxButton.YesNo, MessageBoxImage.Question);
 
             if (result == MessageBoxResult.Yes)
             {
@@ -229,19 +231,19 @@ namespace ClientApplicationWpf.ViewModel
 
             _traceItems = new ObservableCollection<TraceItem>();
 
-            RegisterMesseges();
+            RegisterMessages();
         }
 
-        private void RegisterMesseges()
+        private void RegisterMessages()
         {
             Messenger.Default.Register<LoginRequestMsg>(this, msg =>
-            {
-                ManageUserLogin();
+			{
+				ManageUserLogin();
             });
 	
             Messenger.Default.Register<LoginCancelingMsg>(this, msg =>
             {
-                var result = MessageBox.Show("Are you sure you want to close this application ?", "Confirmation", MessageBoxButton.YesNo, MessageBoxImage.Question);
+                var result = MessageBox.Show("Sunteți sigur/ă ca doriți să închideți aplicația ?", "Confirmare", MessageBoxButton.YesNo, MessageBoxImage.Question);
 
                 if(result == MessageBoxResult.Yes)
                     Application.Current.Shutdown();
@@ -285,7 +287,7 @@ namespace ClientApplicationWpf.ViewModel
                 {
                     _tcpCommunication.Dispose();
                     Messenger.Default.Send(new LoginFailedMsg());
-                    MessageBox.Show(message[1], @"Invalid user or password");
+                    MessageBox.Show(message[1], @"Datele de autentificare sunt invalide.", MessageBoxButton.OK, MessageBoxImage.Warning);
                 }
                 else
                 {
@@ -317,7 +319,7 @@ namespace ClientApplicationWpf.ViewModel
                 var str = "Message: " + ex.Message +
                           "\nSource: " + ex.Source +
                           "\nStackTrace: " + ex.StackTrace;
-                MessageBox.Show(str, @"Synchroniser - Format Exception");
+                MessageBox.Show(str, @"Sincronizator de fișiere - Excepție de formatare");
             }
             catch (SocketException ex)
             {
@@ -327,7 +329,7 @@ namespace ClientApplicationWpf.ViewModel
                 var str = "Message: " + ex.Message +
                           "\nSource: " + ex.Source +
                           "\nStackTrace: " + ex.StackTrace;
-                MessageBox.Show(str, @"Synchroniser - Socket Exception");
+                MessageBox.Show(str, @"Sincronizator de fișiere - Excepție de socket");
             }
             catch (Exception ex)
             {
@@ -338,14 +340,28 @@ namespace ClientApplicationWpf.ViewModel
                           "\nSource: " + ex.Source +
                           "\nException Type: " + ex.GetType() +
                           "\nStackTrace: " + ex.StackTrace;
-                MessageBox.Show(str, @"Synchroniser - Exception");
+                MessageBox.Show(str, @"Sincronizator de fișiere - Excepție");
             }
         }
 
         private TcpClient EstablishTcpCommunication()
         {
-            var tcpClient = new TcpClient(Helper.HostIp, Helper.HostPort);
-            var networkStream = tcpClient.GetStream();
+			TcpClient tcpClient = new TcpClient();
+			IPAddress ipAddress;
+			Ping pingSender = new Ping();
+			PingReply reply;
+
+			while (true)
+			{
+				ipAddress = Dns.GetHostEntry(Helper.HostName).AddressList[0];
+				reply = pingSender.Send(ipAddress);
+				if (reply.Status == IPStatus.Success)
+					break;
+			}
+
+			tcpClient.Connect(ipAddress, Helper.HostPort);
+
+			var networkStream = tcpClient.GetStream();
             var userInfos = Encoding.UTF8.GetBytes(ConnectedUserName);
 
             networkStream.Write(userInfos, 0, userInfos.Count());

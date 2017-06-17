@@ -82,16 +82,6 @@ namespace ClientApplicationWpf.Model
             }
         }
 
-        private void InitFileStream()
-        {
-            if (File.Exists(FullLocalPath))
-                while (Helper.IsFileLocked(FullLocalPath))
-                    Thread.Sleep(500);
-
-            // The stream must be opened after the hash is received !
-            FileStream = File.Open(FullLocalPath, FileMode.OpenOrCreate, FileAccess.ReadWrite, FileShare.None);
-        }
-
         /// <summary>
         /// Used in InitialSyncProcessor and on GetAllFileHashes
         /// </summary>
@@ -137,10 +127,20 @@ namespace ClientApplicationWpf.Model
 
             FileInfo = null;
         }
-        #endregion Constructors
+		#endregion Constructors
 
-        #region Methods
-        public int GetFilesHashCode()
+		#region Methods
+		private void InitFileStream()
+		{
+			if (File.Exists(FullLocalPath))
+				while (Helper.IsFileLocked(FullLocalPath))
+					Thread.Sleep(500);
+
+			// The stream must be opened after the hash is received !
+			FileStream = File.Open(FullLocalPath, FileMode.OpenOrCreate, FileAccess.ReadWrite, FileShare.None);
+		}
+
+		public int GetFilesHashCode()
         {
             using (var md5 = MD5.Create())
             {

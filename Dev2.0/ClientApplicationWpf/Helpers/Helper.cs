@@ -10,7 +10,7 @@ namespace ClientApplicationWpf
     {
         static Helper()
         {
-            HostIp = ConfigurationManager.AppSettings["HostIp"];
+            HostName = ConfigurationManager.AppSettings["HostName"];
             HostPort = int.Parse(ConfigurationManager.AppSettings["HostPort"]);
 
             _userName = ConfigurationManager.AppSettings["UserName"];
@@ -25,7 +25,7 @@ namespace ClientApplicationWpf
         }
 
         #region ConfigKeys
-        public static string HostIp { get; private set; }
+        public static string HostName { get; private set; }
         public static int HostPort { get; private set; }
 
         private static string _userName;
@@ -247,14 +247,6 @@ namespace ClientApplicationWpf
 
             Logger.WriteLine("Ajutor: SchimbăAtributeleFișierului - comportament neașteptat");
             return false;
-        }
-
-        public static bool WasFileMoved(string oldPath, string newPath)
-        {
-            var oldPathSlashOcurrence = oldPath.Split('/').Length - 1;
-            var newPathSlashOcurrence = newPath.Split('/').Length - 1;
-
-            return oldPathSlashOcurrence != newPathSlashOcurrence;
         }
         #endregion PublicMethods
 

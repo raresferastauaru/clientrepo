@@ -149,7 +149,7 @@ namespace ClientApplicationWpf.APIs
                     catch (Exception ex)
                     {
                         var str = "Source: " + ex.Source + "\nMessage: " + ex.Message + "\nStackTrace: " + ex.StackTrace;
-                        MessageBox.Show(str, @"AsyncReading - Exception - " + ex.GetType().Name, MessageBoxButton.OK, MessageBoxImage.Error);
+                        MessageBox.Show(str, @"Citire asincronă - Excepție - " + ex.GetType().Name, MessageBoxButton.OK, MessageBoxImage.Error);
                     }
                 }
             };

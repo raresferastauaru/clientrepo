@@ -101,7 +101,6 @@
     <Compile Include="Messages\LoginCancelingMsg.cs" />
     <Compile Include="Messages\LoginRequestMsg.cs" />
     <Compile Include="Messages\LoginSuccededMsg.cs" />
-    <Compile Include="Messages\LogoutMsg.cs" />
     <Compile Include="Messages\TraceItemAddedMsg.cs" />
     <Compile Include="Model\CustomFileHash.cs" />
     <Compile Include="Model\FileChangeTypes.cs" />

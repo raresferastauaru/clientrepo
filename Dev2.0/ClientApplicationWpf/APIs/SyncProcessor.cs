@@ -34,15 +34,17 @@ namespace ClientApplicationWpf.APIs
             _changedFilesList.Add(customFileHash);
         }
 
-        //public bool InProcessingList(string relativePath, FileChangeTypes changeType)
-        //{
-        //    return _changedFilesList.Any(f => f.RelativePath.Equals(relativePath) && f.ChangeType == changeType);
-        //}
+		// Verifică astea 2 abordări la facultă !! În sinc live, între 2 pc-uri
 
-        public bool InProcessingList(string relativePath)
-        {
-            return _changedFilesList.Any(f => f.RelativePath.Equals(relativePath));
-        }
+		public bool InProcessingList(string relativePath, FileChangeTypes changeType)
+		{
+			return _changedFilesList.Any(f => f.RelativePath.Equals(relativePath) && f.ChangeType == changeType);
+		}
+
+		//public bool InProcessingList(string relativePath)
+		//{
+		//	return _changedFilesList.Any(f => f.RelativePath.Equals(relativePath));
+		//}
 
         public void RemoveFileHash(string relativePath)
         {

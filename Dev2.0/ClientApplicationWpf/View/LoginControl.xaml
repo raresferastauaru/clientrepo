@@ -46,10 +46,10 @@
 
         <StackPanel Grid.Row="3" Grid.Column="1" Orientation="Horizontal" HorizontalAlignment="Center">
             <CheckBox VerticalAlignment="Center" HorizontalAlignment="Center" Content="Ține minte"
-                  IsChecked="{Binding RememberUserDetails}"/>
+                  IsChecked="{Binding RememberUserDetails}" IsEnabled="{Binding BoxesEnabled}"/>
             <GridSplitter Width="3" HorizontalAlignment="Stretch" Margin="10 5 10 5" IsEnabled="False" Background="SkyBlue"/>
             <CheckBox VerticalAlignment="Center" HorizontalAlignment="Center" Content="Configurare"
-                  IsChecked="{Binding ConfigureApp}"/>
+                  IsChecked="{Binding ConfigureApp}" IsEnabled="{Binding BoxesEnabled}"/>
         </StackPanel>
 
         <Label Content="Director de sincronizare: " Grid.Row="4" Grid.Column="0" 

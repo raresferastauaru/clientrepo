@@ -16,7 +16,7 @@ namespace ClientApplicationWpf
             if (Process.GetProcessesByName(thisProc.ProcessName).Length > 1)
             {
                 // If ther is more than one, than it is already running.
-                MessageBox.Show("Application is already running.");
+                MessageBox.Show("Aplicația este deja pornită.");
                 Application.Current.Shutdown();
                 return;
             }
