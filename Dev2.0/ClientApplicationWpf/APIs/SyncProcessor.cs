@@ -36,17 +36,17 @@ namespace ClientApplicationWpf.APIs
 
 		// Verifică astea 2 abordări la facultă !! În sinc live, între 2 pc-uri
 
-		public bool InProcessingList(string relativePath, FileChangeTypes changeType)
-		{
-			return _changedFilesList.Any(f => f.RelativePath.Equals(relativePath) && f.ChangeType == changeType);
-		}
-
-		//public bool InProcessingList(string relativePath)
+		//public bool InProcessingList(string relativePath, FileChangeTypes changeType)
 		//{
-		//	return _changedFilesList.Any(f => f.RelativePath.Equals(relativePath));
+		//	return _changedFilesList.Any(f => f.RelativePath.Equals(relativePath) && f.ChangeType == changeType);
 		//}
 
-        public void RemoveFileHash(string relativePath)
+		public bool InProcessingList(string relativePath)
+		{
+			return _changedFilesList.Any(f => f.RelativePath.Equals(relativePath));
+		}
+
+		public void RemoveFileHash(string relativePath)
         {
             var fileHash = _changedFilesList.First(f => f.RelativePath == relativePath);
             _changedFilesList.Remove(fileHash);

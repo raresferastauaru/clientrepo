@@ -70,7 +70,7 @@ namespace ClientApplicationWpf.APIs
 
             if (fileChangeType == FileChangeTypes.DeletedOnClient 
                 || 
-                (!Helper.IsFileLocked(fullPath) && !_syncProcessor.InProcessingList(relativePath, fileChangeType) && !Path.GetExtension(fullPath).ToLower().Equals(".tmp")))
+				(!Helper.IsFileLocked(fullPath) && !_syncProcessor.InProcessingList(relativePath) && Helper.ExtensionIsNotExcluded(Path.GetExtension(fullPath).ToLower())))
 			{
                 var fileHash = new CustomFileHash(fileChangeType, fullPath, oldFullPath);
                 _syncProcessor.AddChangedFile(fileHash);

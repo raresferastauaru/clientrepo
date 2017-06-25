@@ -1,5 +1,6 @@
 ﻿using ClientApplicationWpf.Model;
 using System;
+using System.Collections.Generic;
 using System.Configuration;
 using System.IO;
 using System.Threading;
@@ -8,7 +9,9 @@ namespace ClientApplicationWpf
 {
     public class Helper
     {
-        static Helper()
+		private static List<string> _excludedPaths;
+
+		static Helper()
         {
             HostName = ConfigurationManager.AppSettings["HostName"];
             HostPort = int.Parse(ConfigurationManager.AppSettings["HostPort"]);
@@ -22,7 +25,17 @@ namespace ClientApplicationWpf
 
             BufferSize = int.Parse(ConfigurationManager.AppSettings["BufferSize"]);
             TraceEnabled = bool.Parse(ConfigurationManager.AppSettings["TraceEnabled"]);
-        }
+
+			_excludedPaths = new List<String>()
+			{
+				".tmp",
+				".doc", ".docx", ".docm",
+				".accdb", ".laccdb",
+				".ppt", ".pptx",
+				".pub", 
+				".xls", ".xlsx" // it creates some simple files.how do you ignore that ?!
+			};
+		}
 
         #region ConfigKeys
         public static string HostName { get; private set; }
@@ -85,7 +98,7 @@ namespace ClientApplicationWpf
             }
         }
 
-        private static string _syncLocation;
+		private static string _syncLocation;
         public static string SyncLocation
         {
             get { return _syncLocation; }
@@ -248,10 +261,16 @@ namespace ClientApplicationWpf
             Logger.WriteLine("Ajutor: SchimbăAtributeleFișierului - comportament neașteptat");
             return false;
         }
-        #endregion PublicMethods
 
-        #region PrivateMethods
-        private static void ValidateLoggingLocation()
+		public static bool ExtensionIsNotExcluded(string extension)
+		{
+			var notExcluded = !_excludedPaths.Contains(extension);
+			return notExcluded;
+		}
+		#endregion PublicMethods
+
+		#region PrivateMethods
+		private static void ValidateLoggingLocation()
         {
             _loggerLocation = ConfigurationManager.AppSettings["LoggingLocation"];
             _currentLoggingFileLocation = _loggerLocation + "Log_" + DateTime.Now.ToShortDateString().Replace("/", "_") + " (0).txt";
